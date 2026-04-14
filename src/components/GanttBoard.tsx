@@ -74,6 +74,8 @@ export const GanttBoard = ({
           listCellWidth="0px"
           columnWidth={columnWidth}
           todayColor="#f2f9ff"
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore – gantt-task-react v0.3.9 runtime supports selectedTaskId but types are missing
           selectedTaskId={selectedTaskId}
           onSelect={(task) => onSelectTask(String(task.id))}
           onDateChange={(task) => {
