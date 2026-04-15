@@ -2,24 +2,24 @@ import { arrayMove } from "@dnd-kit/sortable";
 import { SortBy, TaskFilters, TaskItem, VisibleTask } from "../types";
 import { calcDuration, toDate } from "./date";
 
-const priorityWeight: Record<string, number> = { 高: 1, 中: 2, 低: 3 };
+const priorityWeight: Record<string, number> = { high: 1, medium: 2, low: 3 };
 
 const sortSiblings = (tasks: TaskItem[], sortBy: SortBy): TaskItem[] => {
   const copy = [...tasks];
-  if (sortBy === "默认") {
+  if (sortBy === "default") {
     return copy.sort((a, b) => a.order - b.order);
   }
   return copy.sort((a, b) => {
     switch (sortBy) {
-      case "名称":
+      case "name":
         return a.name.localeCompare(b.name, "zh-CN");
-      case "开始日期":
+      case "startDate":
         return toDate(a.startDate).getTime() - toDate(b.startDate).getTime();
-      case "结束日期":
+      case "endDate":
         return toDate(a.endDate).getTime() - toDate(b.endDate).getTime();
-      case "进度":
+      case "progress":
         return b.progress - a.progress;
-      case "优先级":
+      case "priority":
         return (priorityWeight[a.priority] ?? 9) - (priorityWeight[b.priority] ?? 9);
       default:
         return a.order - b.order;
@@ -31,9 +31,9 @@ const taskMatches = (task: TaskItem, search: string, filters: TaskFilters): bool
   const matchedSearch =
     search.trim().length === 0 ||
     [task.name, task.owner, task.notes].join(" ").toLowerCase().includes(search.toLowerCase());
-  const matchedOwner = filters.owner === "全部" || task.owner === filters.owner;
-  const matchedStatus = filters.status === "全部" || task.status === filters.status;
-  const matchedPriority = filters.priority === "全部" || task.priority === filters.priority;
+  const matchedOwner = filters.owner === "all" || task.owner === filters.owner;
+  const matchedStatus = filters.status === "all" || task.status === filters.status;
+  const matchedPriority = filters.priority === "all" || task.priority === filters.priority;
   return matchedSearch && matchedOwner && matchedStatus && matchedPriority;
 };
 
@@ -52,8 +52,7 @@ export const getChildrenMap = (tasks: TaskItem[], projectId: string): Map<string
 
 export const getDescendantIds = (tasks: TaskItem[], parentId: string): string[] => {
   const children = tasks.filter((task) => task.parentId === parentId);
-  const descendants = children.flatMap((child) => [child.id, ...getDescendantIds(tasks, child.id)]);
-  return descendants;
+  return children.flatMap((child) => [child.id, ...getDescendantIds(tasks, child.id)]);
 };
 
 export const getVisibleTasks = (
@@ -65,6 +64,7 @@ export const getVisibleTasks = (
   sortBy: SortBy
 ): VisibleTask[] => {
   const map = getChildrenMap(tasks, projectId);
+
   const traverse = (task: TaskItem, depth: number): { matched: boolean; rows: VisibleTask[] } => {
     const children = sortSiblings(map.get(task.id) ?? [], sortBy);
     const childRows: VisibleTask[] = [];
@@ -89,6 +89,7 @@ export const getVisibleTasks = (
       depth,
       hasChildren: children.length > 0
     };
+
     const rows = collapsedIds.has(task.id) ? [current] : [current, ...childRows];
     return { matched: true, rows };
   };

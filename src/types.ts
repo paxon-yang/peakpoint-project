@@ -1,7 +1,9 @@
-export type TaskStatus = "未开始" | "进行中" | "已完成" | "延期";
-export type TaskPriority = "高" | "中" | "低";
-export type ViewModeOption = "日" | "周" | "月";
-export type SortBy = "默认" | "名称" | "开始日期" | "结束日期" | "进度" | "优先级";
+export type Language = "zh" | "en";
+
+export type TaskStatus = "not_started" | "in_progress" | "completed" | "delayed";
+export type TaskPriority = "high" | "medium" | "low";
+export type ViewModeOption = "day" | "week" | "month";
+export type SortBy = "default" | "name" | "startDate" | "endDate" | "progress" | "priority";
 
 export interface ProjectItem {
   id: string;
@@ -13,6 +15,8 @@ export interface TaskItem {
   id: string;
   projectId: string;
   parentId?: string;
+  isCategoryPlaceholder?: boolean;
+  category: string;
   name: string;
   startDate: string;
   endDate: string;
@@ -35,8 +39,8 @@ export interface PersistedState {
 
 export interface TaskFilters {
   owner: string;
-  status: TaskStatus | "全部";
-  priority: TaskPriority | "全部";
+  status: TaskStatus | "all";
+  priority: TaskPriority | "all";
 }
 
 export interface VisibleTask {

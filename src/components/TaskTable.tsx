@@ -1,97 +1,143 @@
+import { Fragment, useMemo, useState } from "react";
 import { DndContext, DragEndEvent, PointerSensor, closestCenter, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { VisibleTask } from "../types";
+import { getStatusLabel } from "../i18n";
+import { Language, TaskItem, VisibleTask } from "../types";
 
 interface TaskTableProps {
+  language: Language;
+  t: (
+    key:
+      | "category"
+      | "taskName"
+      | "owner"
+      | "status"
+      | "start"
+      | "end"
+      | "duration"
+      | "progress"
+      | "dependencies"
+      | "actions"
+      | "noTasks"
+      | "quickDelete"
+      | "insertRow"
+      | "insertRoot"
+      | "daySuffix"
+  ) => string;
   tasks: VisibleTask[];
   selectedTaskId?: string;
   onSelectTask: (taskId: string) => void;
-  onEditTask: (taskId: string) => void;
   onDeleteTask: (taskId: string) => void;
+  onInsertRoot: (category?: string) => void;
+  onRenameCategory: (currentCategory: string, nextCategory: string) => void;
   onToggleCollapse: (taskId: string) => void;
   onChangeProgress: (taskId: string, progress: number) => void;
+  onQuickUpdate: (taskId: string, patch: Partial<TaskItem>) => void;
   collapsedTaskIds: Set<string>;
   onDragOrderChange: (activeId: string, overId: string) => void;
+  onScrollElementReady?: (element: HTMLDivElement | null) => void;
 }
 
-interface RowProps {
+interface TaskRowProps {
+  language: Language;
+  t: TaskTableProps["t"];
   row: VisibleTask;
   selectedTaskId?: string;
   onSelectTask: (taskId: string) => void;
-  onEditTask: (taskId: string) => void;
   onDeleteTask: (taskId: string) => void;
   onToggleCollapse: (taskId: string) => void;
   onChangeProgress: (taskId: string, progress: number) => void;
+  onQuickUpdate: (taskId: string, patch: Partial<TaskItem>) => void;
   collapsedTaskIds: Set<string>;
 }
 
-const SortableRow = ({
+interface CategoryGroup {
+  category: string;
+  rows: VisibleTask[];
+}
+
+const TaskDataRow = ({
+  language,
+  t,
   row,
   selectedTaskId,
   onSelectTask,
-  onEditTask,
   onDeleteTask,
   onToggleCollapse,
   onChangeProgress,
+  onQuickUpdate,
   collapsedTaskIds
-}: RowProps) => {
+}: TaskRowProps) => {
   const statusClassMap: Record<string, string> = {
-    "\u672a\u5f00\u59cb": "status-not-started",
-    "\u8fdb\u884c\u4e2d": "status-in-progress",
-    "\u5df2\u5b8c\u6210": "status-completed",
-    "\u5ef6\u671f": "status-delayed"
+    not_started: "status-not-started",
+    in_progress: "status-in-progress",
+    completed: "status-completed",
+    delayed: "status-delayed"
   };
+
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: row.task.id });
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.6 : 1
   };
-  const indent = row.depth * 18;
+
+  const indent = row.depth * 12;
   const isSelected = selectedTaskId === row.task.id;
 
   return (
-    <tr
-      ref={setNodeRef}
-      style={style}
-      className={isSelected ? "selected-row" : undefined}
-      onClick={() => onSelectTask(row.task.id)}
-      title={row.task.notes}
-    >
+    <tr ref={setNodeRef} style={style} className={isSelected ? "selected-row" : undefined} onClick={() => onSelectTask(row.task.id)} title={row.task.notes}>
       <td>
-        <button className="drag-handle" {...attributes} {...listeners} title={"\u62d6\u62fd\u6392\u5e8f"}>
-          ::
-        </button>
+        <div className="row-leading-actions">
+          <button className="drag-handle" {...attributes} {...listeners} title={language === "zh" ? "\u62d6\u62fd\u6392\u5e8f" : "Drag to reorder"}>
+            ::
+          </button>
+        </div>
       </td>
       <td>
         <div className="task-name-cell" style={{ paddingLeft: `${indent}px` }}>
           {row.hasChildren ? (
             <button
               type="button"
-              className="icon-btn"
+              className="icon-btn category-toggle"
               onClick={(event) => {
                 event.stopPropagation();
                 onToggleCollapse(row.task.id);
               }}
-              title={"\u6298\u53e0/\u5c55\u5f00"}
+              title={language === "zh" ? "\u6298\u53e0/\u5c55\u5f00" : "Expand / Collapse"}
             >
               {collapsedTaskIds.has(row.task.id) ? ">" : "v"}
             </button>
           ) : (
             <span className="placeholder-indent" />
           )}
-          <span>{row.task.isMilestone ? `* ${row.task.name}` : row.task.name}</span>
+          <input className="inline-text" value={row.task.name} onClick={(event) => event.stopPropagation()} onChange={(event) => onQuickUpdate(row.task.id, { name: event.target.value })} />
         </div>
       </td>
-      <td>{row.task.owner}</td>
       <td>
-        <span className={`tag ${statusClassMap[row.task.status] ?? ""}`}>{row.task.status}</span>
+        <input className="inline-text" value={row.task.owner} onClick={(event) => event.stopPropagation()} onChange={(event) => onQuickUpdate(row.task.id, { owner: event.target.value })} />
       </td>
-      <td>{row.task.priority}</td>
-      <td>{row.task.startDate}</td>
-      <td>{row.task.endDate}</td>
-      <td>{`${row.task.duration}\u5929`}</td>
+      <td className={`status-cell ${statusClassMap[row.task.status] ?? ""}`}>
+        <select
+          className="inline-select"
+          value={row.task.status}
+          onClick={(event) => event.stopPropagation()}
+          onChange={(event) => onQuickUpdate(row.task.id, { status: event.target.value as TaskItem["status"] })}
+        >
+          <option value="not_started">{getStatusLabel(language, "not_started")}</option>
+          <option value="in_progress">{getStatusLabel(language, "in_progress")}</option>
+          <option value="completed">{getStatusLabel(language, "completed")}</option>
+          <option value="delayed">{getStatusLabel(language, "delayed")}</option>
+        </select>
+      </td>
+      <td>
+        <input type="date" className="inline-date" value={row.task.startDate} onClick={(event) => event.stopPropagation()} onChange={(event) => onQuickUpdate(row.task.id, { startDate: event.target.value })} />
+      </td>
+      <td>
+        <input type="date" className="inline-date" value={row.task.endDate} onClick={(event) => event.stopPropagation()} onChange={(event) => onQuickUpdate(row.task.id, { endDate: event.target.value })} />
+      </td>
+      <td>{`${row.task.duration}${t("daySuffix")}`}</td>
       <td>
         <div className="progress-inline">
           <input
@@ -105,46 +151,52 @@ const SortableRow = ({
           <span>{`${row.task.progress}%`}</span>
         </div>
       </td>
-      <td>{row.task.dependencyIds.length > 0 ? row.task.dependencyIds.join(",") : "-"}</td>
-      <td>
-        <div className="action-cell">
-          <button
-            type="button"
-            className="icon-btn"
-            onClick={(event) => {
-              event.stopPropagation();
-              onEditTask(row.task.id);
-            }}
-          >
-            {"\u7f16\u8f91"}
-          </button>
-          <button
-            type="button"
-            className="icon-btn danger"
-            onClick={(event) => {
-              event.stopPropagation();
-              onDeleteTask(row.task.id);
-            }}
-          >
-            {"\u5220\u9664"}
-          </button>
-        </div>
+      <td>{row.task.dependencyIds.length > 0 ? row.task.dependencyIds.join(", ") : "-"}</td>
+      <td className="row-delete-cell">
+        <button
+          className="cell-delete-btn"
+          title={t("quickDelete")}
+          onClick={(event) => {
+            event.stopPropagation();
+            onDeleteTask(row.task.id);
+          }}
+        >
+          x
+        </button>
       </td>
     </tr>
   );
 };
 
 export const TaskTable = ({
+  language,
+  t,
   tasks,
   selectedTaskId,
   onSelectTask,
-  onEditTask,
   onDeleteTask,
+  onInsertRoot,
+  onRenameCategory,
   onToggleCollapse,
   onChangeProgress,
+  onQuickUpdate,
   collapsedTaskIds,
-  onDragOrderChange
+  onDragOrderChange,
+  onScrollElementReady
 }: TaskTableProps) => {
+  const [categoryDrafts, setCategoryDrafts] = useState<Record<string, string>>({});
+
+  const grouped = useMemo<CategoryGroup[]>(() => {
+    const map = new Map<string, VisibleTask[]>();
+    for (const row of tasks) {
+      const key = row.task.category || (language === "zh" ? "\u672a\u5206\u7c7b" : "Uncategorized");
+      const list = map.get(key) ?? [];
+      list.push(row);
+      map.set(key, list);
+    }
+    return Array.from(map.entries()).map(([category, rows]) => ({ category, rows }));
+  }, [tasks, language]);
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 6 }
@@ -157,57 +209,117 @@ export const TaskTable = ({
     onDragOrderChange(String(active.id), String(over.id));
   };
 
+  const taskIds = tasks.map((item) => item.task.id);
+
+  const commitCategoryRename = (currentCategory: string, inputValue: string) => {
+    const nextCategory = inputValue.trim();
+    setCategoryDrafts((prev) => {
+      const next = { ...prev };
+      delete next[currentCategory];
+      return next;
+    });
+    if (!nextCategory || nextCategory === currentCategory) return;
+    onRenameCategory(currentCategory, nextCategory);
+  };
+
   return (
-    <div className="task-table-wrapper">
-      <table className="task-table">
+    <div className="task-table-wrapper" ref={onScrollElementReady ?? undefined}>
+      <table className="task-table excel-like-table grouped-table">
         <colgroup>
-          <col style={{ width: 40 }} />
-          <col style={{ width: 240 }} />
-          <col style={{ width: 100 }} />
-          <col style={{ width: 92 }} />
-          <col style={{ width: 70 }} />
-          <col style={{ width: 110 }} />
-          <col style={{ width: 110 }} />
-          <col style={{ width: 70 }} />
+          <col style={{ width: 48 }} />
+          <col style={{ width: 300 }} />
+          <col style={{ width: 130 }} />
+          <col style={{ width: 150 }} />
+          <col style={{ width: 142 }} />
+          <col style={{ width: 142 }} />
+          <col style={{ width: 76 }} />
           <col style={{ width: 140 }} />
-          <col style={{ width: 120 }} />
-          <col style={{ width: 112 }} />
+          <col style={{ width: 140 }} />
+          <col style={{ width: 64 }} />
         </colgroup>
         <thead>
           <tr>
-            <th />
-            <th>{"\u4efb\u52a1\u540d\u79f0"}</th>
-            <th>{"\u8d1f\u8d23\u4eba"}</th>
-            <th>{"\u72b6\u6001"}</th>
-            <th>{"\u4f18\u5148\u7ea7"}</th>
-            <th>{"\u5f00\u59cb"}</th>
-            <th>{"\u7ed3\u675f"}</th>
-            <th>{"\u5de5\u671f"}</th>
-            <th>{"\u8fdb\u5ea6"}</th>
-            <th>{"\u4f9d\u8d56"}</th>
-            <th>{"\u64cd\u4f5c"}</th>
+            <th>
+              <button className="cell-mini-btn" onClick={() => onInsertRoot()} title={t("insertRoot")}>
+                +
+              </button>
+            </th>
+            <th>{t("taskName")}</th>
+            <th>{t("owner")}</th>
+            <th>{t("status")}</th>
+            <th>{t("start")}</th>
+            <th>{t("end")}</th>
+            <th>{t("duration")}</th>
+            <th>{t("progress")}</th>
+            <th>{t("dependencies")}</th>
+            <th>{t("actions")}</th>
           </tr>
         </thead>
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <SortableContext items={tasks.map((item) => item.task.id)} strategy={verticalListSortingStrategy}>
+          <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
             <tbody>
-              {tasks.map((row) => (
-                <SortableRow
-                  key={row.task.id}
-                  row={row}
-                  selectedTaskId={selectedTaskId}
-                  onSelectTask={onSelectTask}
-                  onEditTask={onEditTask}
-                  onDeleteTask={onDeleteTask}
-                  onToggleCollapse={onToggleCollapse}
-                  onChangeProgress={onChangeProgress}
-                  collapsedTaskIds={collapsedTaskIds}
-                />
-              ))}
+              {grouped.map((group) => {
+                return (
+                  <Fragment key={`group-${group.category}`}>
+                    <tr className="category-row">
+                      <td colSpan={10}>
+                        <div className="category-row-content">
+                          <button className="cell-mini-btn" onClick={() => onInsertRoot(group.category)} title={t("insertRow")}>
+                            +
+                          </button>
+                          <input
+                            className="category-title-input"
+                            value={categoryDrafts[group.category] ?? group.category}
+                            onClick={(event) => event.stopPropagation()}
+                            onChange={(event) =>
+                              setCategoryDrafts((prev) => ({
+                                ...prev,
+                                [group.category]: event.target.value
+                              }))
+                            }
+                            onKeyDown={(event) => {
+                              if (event.key === "Enter") {
+                                event.preventDefault();
+                                commitCategoryRename(group.category, (event.target as HTMLInputElement).value);
+                                (event.target as HTMLInputElement).blur();
+                              }
+                              if (event.key === "Escape") {
+                                event.preventDefault();
+                                setCategoryDrafts((prev) => {
+                                  const next = { ...prev };
+                                  delete next[group.category];
+                                  return next;
+                                });
+                                (event.target as HTMLInputElement).blur();
+                              }
+                            }}
+                            onBlur={(event) => commitCategoryRename(group.category, event.target.value)}
+                          />
+                        </div>
+                      </td>
+                    </tr>
+                    {group.rows.map((row) => (
+                      <TaskDataRow
+                        key={row.task.id}
+                        language={language}
+                        t={t}
+                        row={row}
+                        selectedTaskId={selectedTaskId}
+                        onSelectTask={onSelectTask}
+                        onDeleteTask={onDeleteTask}
+                        onToggleCollapse={onToggleCollapse}
+                        onChangeProgress={onChangeProgress}
+                        onQuickUpdate={onQuickUpdate}
+                        collapsedTaskIds={collapsedTaskIds}
+                      />
+                    ))}
+                  </Fragment>
+                );
+              })}
               {tasks.length === 0 ? (
                 <tr>
-                  <td colSpan={11} className="empty-cell">
-                    {"\u6682\u65e0\u4efb\u52a1\uff0c\u8bf7\u65b0\u589e\u4efb\u52a1\u3002"}
+                  <td colSpan={10} className="empty-cell">
+                    {t("noTasks")}
                   </td>
                 </tr>
               ) : null}

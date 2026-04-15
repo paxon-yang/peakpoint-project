@@ -1,0 +1,2594 @@
+CCSA PROJECT FULL CODE EXPORT`r`nGenerated: 2026-04-14 10:48:51`r`n
+`r`n==================================================`r`nFILE: .gitignore`r`n==================================================`r`n
+node_modules
+dist
+.npm-cache
+*.log
+*.tsbuildinfo
+vite.config.js
+vite.config.d.ts
+.env
+.env.local
+.DS_Store
+
+.vercel
+`r`n==================================================`r`nFILE: index.html`r`n==================================================`r`n
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CCSA项目管理</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+`r`n==================================================`r`nFILE: package.json`r`n==================================================`r`n
+{
+  "name": "ccsa-project-management",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
+    "date-fns": "^4.1.0",
+    "gantt-task-react": "^0.3.9",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.11"
+  }
+}
+`r`n==================================================`r`nFILE: README.md`r`n==================================================`r`n
+# CCSA项目管理
+
+基于 `React + TypeScript + Vite` 的前端甘特图项目管理系统（SPA）�? 
+默认中文界面，系统标题为 **CCSA项目管理**，支持本地持久化，刷新不丢数据�?
+## 当前版本状�?
+- UI 已完成第 5 轮收官（Notion 风格高贴合）
+- 功能核心可用：项目管理、任务管理、甘特展示、筛选排序、拖拽调整、本地存�?- 已封版：�?[UI_BASELINE_V1.md](./UI_BASELINE_V1.md)
+
+## 功能概览
+
+- 左表右图布局（左侧任务表 + 右侧甘特图）
+- 新增项目、新增任务、编辑任务、删除任务（含子任务级联删除�?- 任务字段：名称、开�?结束日期、工期、负责人、进度、优先级、状态、依赖、备注、里程碑
+- 父子任务层级、折�?展开
+- 左侧任务拖拽排序
+- 甘特条拖拽调整开�?结束时间
+- 甘特进度调整（甘特拖�?+ 表格滑块�?- 依赖连线显示
+- �?�?月视图切�?- 时间轴缩放、滚动查�?- 当前日期高亮
+- 搜索、筛选（负责�?状�?优先级）、排�?- 表单基础校验
+- localStorage 持久�?- 默认示例项目：`CCSA主项目`（设计、采购、施工、调试、验收）
+
+## 技术选型
+
+- React + TypeScript + Vite
+- `gantt-task-react`：甘特图核心能力（依赖线、拖拽日期、进度、视图切换）
+- `@dnd-kit`：任务表拖拽排序
+- `date-fns`：稳定日期处�?
+## 项目结构
+
+```text
+ccsa project/
+├─ index.html
+├─ package.json
+├─ README.md
+├─ UI_BASELINE_V1.md
+├─ PROJECT_BRAIN.md
+├─ tsconfig.json
+├─ tsconfig.app.json
+├─ tsconfig.node.json
+├─ vite.config.ts
+└─ src/
+   ├─ App.tsx
+   ├─ main.tsx
+   ├─ styles.css
+   ├─ types.ts
+   ├─ data/
+   �? └─ defaultData.ts
+   ├─ utils/
+   �? ├─ date.ts
+   �? └─ taskUtils.ts
+   └─ components/
+      ├─ GanttBoard.tsx
+      ├─ ProjectDialog.tsx
+      ├─ TaskFormDrawer.tsx
+      ├─ TaskTable.tsx
+      └─ Toolbar.tsx
+```
+
+## 安装与运�?
+```bash
+npm install
+npm run dev
+```
+
+生产构建与预览：
+
+```bash
+npm run build
+npm run preview
+```
+
+## 封版说明
+
+- 本次封版�?UI 规范固定�?`v1.0`
+- 后续迭代请优先遵�?[UI_BASELINE_V1.md](./UI_BASELINE_V1.md)
+- 若需大改视觉风格，请先更新基线文档再改样�?
+`r`n==================================================`r`nFILE: CHANGELOG.md`r`n==================================================`r`n
+# CHANGELOG
+
+All notable changes to this project will be documented in this file.
+
+## [v1.0-ui-baseline] - 2026-04-14
+
+### Added
+- 新增 `UI_BASELINE_V1.md`，固�?Notion Inspired 视觉基线与组件规范�?- 新增封版验收清单与可�?不可改边界，防止后续风格漂移�?
+### Changed
+- 完成 UI �?1-5 轮精修，统一头部、工具栏、表格、抽屉、甘特图视觉语言�?- 甘特图主题升级为 `.notion-gantt-theme`，细化时间头、网格线、任务条、依赖线�?today 高亮样式�?- 表格布局改为固定列宽策略，提升信息密度稳定性和可读性�?- `README.md` 更新为封版导向说明，增加基线文档引用�?- `PROJECT_BRAIN.md` 更新当前状态、决策记录和后续约束�?
+### Notes
+- 当前版本为前端封版基线版本（UI v1.0）�?- 功能保持稳定，主要是视觉与交互细节标准化，不改变核心业务行为�?
+`r`n==================================================`r`nFILE: UI_BASELINE_V1.md`r`n==================================================`r`n
+# UI_BASELINE_V1.md
+> CCSA项目管理 UI 封版基线（v1.0�? 
+> 封版时间�?026-04-14  
+> 目标：后续所有界面迭代保持统一风格、统一节奏、统一交互反馈�?
+## 1. 视觉方向
+
+- 风格：Notion Inspired（暖白、轻边框、低强度阴影�?- 气质：企业内网可读性优先、克制、稳�?- 禁止：高饱和多色、重阴影、夸张动�?
+## 2. 设计 Token（源�?`src/styles.css`�?
+- 背景：`--notion-bg: #ffffff`、`--notion-bg-warm: #f6f5f4`
+- 文本：`--notion-text: rgba(0,0,0,0.95)`、`--notion-text-secondary: #615d59`
+- 主色：`--notion-blue: #0075de`、激�?`#005bab`
+- 边框：`1px solid rgba(0,0,0,0.1)`
+- 圆角：`4px / 8px / 12px`
+- 阴影：Notion 低透明多层阴影（已写入样式变量�?
+## 3. 布局基线
+
+- 页面：头�?+ 内容区（`content-wrap`�?- 主工作区：左右分栏（任务�?48% / 甘特�?52%�?- 面板：统一 `panel-card`（白底、轻边框、轻阴影�?- 移动端：1200px 以下改为单列堆叠
+
+## 4. 组件规范
+
+- 按钮：主按钮蓝底白字，次按钮低对比灰�?- 输入框：32px 高度，focus 使用蓝色 ring
+- 表格：固定列宽（`TaskTable colgroup`），行内省略，禁止宽度抖�?- 标签：统一胶囊样式�?2px、圆�?9999�?- 抽屉：右侧滑出，16px 内边距，标题 22px
+
+## 5. 甘特图皮肤（第四/五轮收官�?
+- 包裹类：`.notion-gantt-theme`
+- 时间头：暖灰背景 + 次级文本�?- 网格线：`rgba(0,0,0,0.06)`
+- today：低透明蓝底
+- 任务条：圆角、低饱和、高可读标签
+- 依赖线：克制线宽与颜�?
+## 6. 可改与不可改
+
+可改（不需改基线文档）�?- 文案
+- 默认数据
+- 业务字段和交互逻辑
+
+需先更新本基线再改�?- 主色与中性色体系
+- 主布局比例
+- 按钮/输入/标签的全局尺寸
+- 甘特图主题样�?
+## 7. 验收清单（封版）
+
+- 中文文案无乱�?- 左表右图布局稳定
+- 任务表列宽稳定，不跳�?- 甘特图日/�?月可切换
+- 拖拽、进度、依赖线可用
+- localStorage 持久化正�?
+`r`n==================================================`r`nFILE: PROJECT_BRAIN.md`r`n==================================================`r`n
+# PROJECT_BRAIN.md
+> Auto-maintained context file. Read this at the start of every AI session.
+> Last updated: 2026-04-14 09:45 (Africa/Johannesburg) | Updated by: Codex
+
+## Project Identity
+- Name: CCSA项目管理
+- Type: Web App (SPA)
+- Stack: React + TypeScript + Vite
+- Language(s): TypeScript, CSS
+- Package Manager: npm
+- Test Framework: 暂未配置（可后续�?Vitest�?- Entry Point: src/main.tsx
+
+## Current State
+- Phase: building (UI baseline sealed)
+- What's working:
+  - 前端工程结构稳定，核心功能可�?  - 任务 CRUD、层级、依赖、拖拽排序、进度调整、甘特拖拽、视图切换、筛选排序已实现
+  - localStorage 持久化生�?  - Notion 风格 UI 已完成第 5 轮收官并封版
+- In progress (do not assume complete):
+  - 本机最终安装依赖与运行验证需用户环境执行
+- Known broken / TODO:
+  - 无明确逻辑阻塞；后续可补测试与导入导出
+- Next priority:
+  - 在本机运行并截图验收，再进入功能增强
+
+## Architecture Decisions (DO NOT REVERSE without discussion)
+- 使用 `gantt-task-react` 实现甘特核心交互 | 降低实现复杂度与维护成本 | 2026-04-14
+- 使用 `@dnd-kit` 实现任务表拖拽排�?| 满足交互需求且生态成�?| 2026-04-14
+- 使用 `localStorage` 做前端持久化 | 当前阶段无后端，确保刷新不丢数据 | 2026-04-14
+- 封版 UI 风格�?Notion Inspired v1.0 | 保持后续迭代视觉一致�?| 2026-04-14
+
+## Code Style Contract
+- Naming: 组件 PascalCase、变�?camelCase
+- File structure: `components/`, `utils/`, `data/`, `types` 分层
+- Comment language: 中文
+- Error handling pattern: 表单校验 + 安全默认�?- State management: React useState + useMemo（轻量）
+
+## Key Files Map
+| File | Purpose |
+|------|---------|
+| src/App.tsx | 主状态管理与页面编排 |
+| src/components/TaskTable.tsx | 左侧任务表、层级展示、拖拽排�?|
+| src/components/GanttBoard.tsx | 右侧甘特图展示与拖拽日期/进度 |
+| src/components/TaskFormDrawer.tsx | 任务新增/编辑表单 |
+| src/styles.css | UI 基线样式（v1.0 封版�?|
+| UI_BASELINE_V1.md | 封版设计规范文档 |
+
+## Environment & Config
+- Node/Python version: 建议 Node 18+
+- Key env vars (names only, not values): �?- Local setup notes:
+  - `npm install`
+  - `npm run dev`
+- Known environment quirks:
+  - 当前会话环境�?`npm install` 曾超时，建议本机直接执行
+
+## Constraints & Non-Negotiables
+- 中文界面标题必须为“CCSA项目管理�?- 仅前端实现，不引入后�?数据�?- 遵循 `UI_BASELINE_V1.md`，避免风格漂�?
+## Decision Log
+| Date | Tool | Decision | Reason |
+|------|------|----------|--------|
+| 2026-04-14 | Codex | 采用 `gantt-task-react` 作为甘特核心 | 快速提供稳定、可维护的甘特能�?|
+| 2026-04-14 | Codex | 使用 `@dnd-kit` 实现任务顺序拖拽 | 满足功能需求且组件化清�?|
+| 2026-04-14 | Codex | 使用 `date-fns` 处理日期 | 降低时区和边界日期风�?|
+| 2026-04-14 | Codex | 完成 UI �?1-5 轮并封版�?v1.0 | 统一视觉和交互规范，便于后续扩展 |
+
+## Session History (brief)
+- [2026-04-14][Codex]: 初始化并生成完整 React+TS 前端项目代码，实现核心甘特功能�?- [2026-04-14][Codex]: �?Notion 风格完成五轮 UI 优化，修复编码污染，封版并新�?UI 基线文档�?
+`r`n==================================================`r`nFILE: tsconfig.json`r`n==================================================`r`n
+{
+  "files": [],
+  "references": [
+    {
+      "path": "./tsconfig.app.json"
+    },
+    {
+      "path": "./tsconfig.node.json"
+    }
+  ]
+}
+`r`n==================================================`r`nFILE: tsconfig.app.json`r`n==================================================`r`n
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "moduleResolution": "Bundler",
+    "allowImportingTsExtensions": false,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "include": ["src"]
+}
+`r`n==================================================`r`nFILE: tsconfig.node.json`r`n==================================================`r`n
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2023"],
+    "composite": true,
+    "skipLibCheck": true,
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "allowSyntheticDefaultImports": true
+  },
+  "include": ["vite.config.ts"]
+}
+`r`n==================================================`r`nFILE: vite.config.ts`r`n==================================================`r`n
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+
+export default defineConfig({
+  plugins: [react()]
+});
+`r`n==================================================`r`nFILE: src\App.tsx`r`n==================================================`r`n
+import { useMemo, useState } from "react";
+import { v4 as uuidv4 } from "uuid";
+import { GanttBoard } from "./components/GanttBoard";
+import { ProjectDialog } from "./components/ProjectDialog";
+import { TaskFormDrawer } from "./components/TaskFormDrawer";
+import { TaskTable } from "./components/TaskTable";
+import { Toolbar } from "./components/Toolbar";
+import { defaultState } from "./data/defaultData";
+import { createTranslator } from "./i18n";
+import { Language, PersistedState, SortBy, TaskFilters, TaskItem, ViewModeOption } from "./types";
+import { calcDuration, normalizeDates } from "./utils/date";
+import { getDescendantIds, getVisibleTasks, reorderTasks, sanitizeTask, uniqueValues } from "./utils/taskUtils";
+
+const STORAGE_KEY = "ccsa-project-management-state-v1";
+const LANGUAGE_KEY = "ccsa-project-management-language";
+
+const normalizeStatus = (value: unknown): TaskItem["status"] => {
+  if (value === "not_started" || value === "\u672a\u5f00\u59cb") return "not_started";
+  if (value === "in_progress" || value === "\u8fdb\u884c\u4e2d") return "in_progress";
+  if (value === "completed" || value === "\u5df2\u5b8c\u6210") return "completed";
+  if (value === "delayed" || value === "\u5ef6\u671f") return "delayed";
+  return "not_started";
+};
+
+const normalizePriority = (value: unknown): TaskItem["priority"] => {
+  if (value === "high" || value === "\u9ad8") return "high";
+  if (value === "medium" || value === "\u4e2d") return "medium";
+  if (value === "low" || value === "\u4f4e") return "low";
+  return "medium";
+};
+
+const loadState = (): PersistedState => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return defaultState;
+    const parsed = JSON.parse(raw) as PersistedState;
+    if (!parsed.projects?.length) return defaultState;
+    return {
+      ...parsed,
+      tasks: (parsed.tasks ?? []).map((task) => ({
+        ...task,
+        status: normalizeStatus(task.status),
+        priority: normalizePriority(task.priority),
+        dependencyIds: Array.isArray(task.dependencyIds) ? task.dependencyIds : []
+      }))
+    };
+  } catch {
+    return defaultState;
+  }
+};
+
+const saveState = (state: PersistedState) => {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+};
+
+const loadLanguage = (): Language => {
+  const raw = localStorage.getItem(LANGUAGE_KEY);
+  return raw === "en" ? "en" : "zh";
+};
+
+export const App = () => {
+  const initial = loadState();
+  const [projects, setProjects] = useState(initial.projects);
+  const [tasks, setTasks] = useState<TaskItem[]>(initial.tasks.map(sanitizeTask));
+  const [activeProjectId, setActiveProjectId] = useState(initial.activeProjectId || initial.projects[0]?.id || "");
+  const [language, setLanguage] = useState<Language>(loadLanguage());
+
+  const [isTaskDrawerOpen, setTaskDrawerOpen] = useState(false);
+  const [isProjectDialogOpen, setProjectDialogOpen] = useState(false);
+  const [taskFormMode, setTaskFormMode] = useState<"create" | "edit">("create");
+  const [editingTaskId, setEditingTaskId] = useState<string>();
+  const [selectedTaskId, setSelectedTaskId] = useState<string>();
+  const [collapsedTaskIds, setCollapsedTaskIds] = useState<Set<string>>(new Set());
+
+  const [viewMode, setViewMode] = useState<ViewModeOption>("week");
+  const [sortBy, setSortBy] = useState<SortBy>("default");
+  const [searchText, setSearchText] = useState("");
+  const [zoom, setZoom] = useState(70);
+  const [filters, setFilters] = useState<TaskFilters>({
+    owner: "all",
+    status: "all",
+    priority: "all"
+  });
+
+  const t = createTranslator(language);
+
+  const activeProjectTasks = useMemo(
+    () => tasks.filter((task) => task.projectId === activeProjectId).sort((a, b) => a.order - b.order),
+    [tasks, activeProjectId]
+  );
+  const owners = useMemo(() => uniqueValues(activeProjectTasks, "owner"), [activeProjectTasks]);
+
+  const visibleTasks = useMemo(
+    () => getVisibleTasks(tasks, activeProjectId, collapsedTaskIds, searchText, filters, sortBy),
+    [tasks, activeProjectId, collapsedTaskIds, searchText, filters, sortBy]
+  );
+  const editingTask = useMemo(() => tasks.find((task) => task.id === editingTaskId), [tasks, editingTaskId]);
+
+  const syncState = (nextProjects: PersistedState["projects"], nextTasks: PersistedState["tasks"], nextActiveProjectId: string) => {
+    setProjects(nextProjects);
+    setTasks(nextTasks);
+    setActiveProjectId(nextActiveProjectId);
+    saveState({
+      projects: nextProjects,
+      tasks: nextTasks,
+      activeProjectId: nextActiveProjectId
+    });
+  };
+
+  const handleProjectCreate = (name: string, description: string) => {
+    const newProject = { id: `project-${uuidv4()}`, name, description };
+    const nextProjects = [...projects, newProject];
+    syncState(nextProjects, tasks, newProject.id);
+    setProjectDialogOpen(false);
+  };
+
+  const handleTaskSubmit = (task: TaskItem) => {
+    const normalized = sanitizeTask(task);
+    const exists = tasks.some((item) => item.id === normalized.id);
+    const nextTasks = exists ? tasks.map((item) => (item.id === normalized.id ? normalized : item)) : [...tasks, normalized];
+    syncState(projects, nextTasks, normalized.projectId);
+    setTaskDrawerOpen(false);
+    setEditingTaskId(undefined);
+    setSelectedTaskId(normalized.id);
+  };
+
+  const handleTaskDelete = (taskId: string) => {
+    const deletedIds = new Set([taskId, ...getDescendantIds(tasks, taskId)]);
+    const nextTasks = tasks
+      .filter((task) => !deletedIds.has(task.id))
+      .map((task) => ({
+        ...task,
+        dependencyIds: task.dependencyIds.filter((id) => !deletedIds.has(id))
+      }));
+    syncState(projects, nextTasks, activeProjectId);
+    if (selectedTaskId && deletedIds.has(selectedTaskId)) {
+      setSelectedTaskId(undefined);
+    }
+  };
+
+  const handleTaskDateChange = (taskId: string, startDate: string, endDate: string) => {
+    const normalized = normalizeDates(startDate, endDate);
+    const nextTasks = tasks.map((task) =>
+      task.id === taskId
+        ? {
+            ...task,
+            startDate: normalized.startDate,
+            endDate: task.isMilestone ? normalized.startDate : normalized.endDate,
+            duration: task.isMilestone ? 1 : calcDuration(normalized.startDate, normalized.endDate)
+          }
+        : task
+    );
+    syncState(projects, nextTasks, activeProjectId);
+  };
+
+  const handleTaskProgressChange = (taskId: string, progress: number) => {
+    const safeProgress = Math.max(0, Math.min(100, Math.round(progress)));
+    const nextTasks = tasks.map((task) => (task.id === taskId ? { ...task, progress: safeProgress } : task));
+    syncState(projects, nextTasks, activeProjectId);
+  };
+
+  const handleTaskQuickUpdate = (taskId: string, patch: Partial<TaskItem>) => {
+    const nextTasks = tasks.map((task) => {
+      if (task.id !== taskId) return task;
+      const nextTask = { ...task, ...patch };
+
+      if (patch.startDate || patch.endDate || patch.isMilestone !== undefined) {
+        const normalized = normalizeDates(patch.startDate ?? task.startDate, patch.endDate ?? task.endDate);
+        nextTask.startDate = normalized.startDate;
+        nextTask.endDate = (patch.isMilestone ?? task.isMilestone) ? normalized.startDate : normalized.endDate;
+      }
+      if (patch.progress !== undefined) {
+        nextTask.progress = Math.max(0, Math.min(100, Math.round(patch.progress)));
+      }
+      nextTask.duration = nextTask.isMilestone ? 1 : calcDuration(nextTask.startDate, nextTask.endDate);
+      return sanitizeTask(nextTask);
+    });
+    syncState(projects, nextTasks, activeProjectId);
+  };
+
+  const handleToggleCollapse = (taskId: string) => {
+    setCollapsedTaskIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(taskId)) next.delete(taskId);
+      else next.add(taskId);
+      return next;
+    });
+  };
+
+  const handleDragOrderChange = (activeId: string, overId: string) => {
+    const nextTasks = reorderTasks(tasks, activeProjectId, activeId, overId);
+    syncState(projects, nextTasks, activeProjectId);
+  };
+
+  const switchLanguage = (nextLanguage: Language) => {
+    setLanguage(nextLanguage);
+    localStorage.setItem(LANGUAGE_KEY, nextLanguage);
+  };
+
+  const openCreateTaskDrawer = () => {
+    setTaskFormMode("create");
+    setEditingTaskId(undefined);
+    setTaskDrawerOpen(true);
+  };
+
+  const openEditTaskDrawer = (taskId: string) => {
+    setTaskFormMode("edit");
+    setEditingTaskId(taskId);
+    setTaskDrawerOpen(true);
+  };
+
+  return (
+    <div className="app-shell">
+      <header className="app-header">
+        <div className="header-inner header-inner-full">
+          <div className="header-title-group">
+            <h1>{t("appTitle")}</h1>
+            <p>{t("appSubtitle")}</p>
+          </div>
+          <div className="header-actions">
+            <div className="language-toggle" aria-label={t("language")}>
+              <button className={`lang-btn ${language === "zh" ? "active" : ""}`} onClick={() => switchLanguage("zh")}>
+                \u4e2d
+              </button>
+              <button className={`lang-btn ${language === "en" ? "active" : ""}`} onClick={() => switchLanguage("en")}>
+                EN
+              </button>
+            </div>
+            <select value={activeProjectId} onChange={(event) => setActiveProjectId(event.target.value)}>
+              {projects.map((project) => (
+                <option key={project.id} value={project.id}>
+                  {project.name}
+                </option>
+              ))}
+            </select>
+            <button className="btn btn-secondary" onClick={() => setProjectDialogOpen(true)}>
+              {t("addProject")}
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <div className="content-wrap content-wrap-full">
+        <Toolbar
+          language={language}
+          t={t}
+          searchText={searchText}
+          onSearchTextChange={setSearchText}
+          filters={filters}
+          owners={owners}
+          onFiltersChange={setFilters}
+          sortBy={sortBy}
+          onSortByChange={setSortBy}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+          zoom={zoom}
+          onZoomChange={setZoom}
+          onAddTask={openCreateTaskDrawer}
+        />
+
+        <main className="main-layout main-layout-dense">
+          <section className="left-panel panel-card">
+            <TaskTable
+              language={language}
+              t={t}
+              tasks={visibleTasks}
+              selectedTaskId={selectedTaskId}
+              onSelectTask={setSelectedTaskId}
+              onDeleteTask={handleTaskDelete}
+              onToggleCollapse={handleToggleCollapse}
+              onChangeProgress={handleTaskProgressChange}
+              onQuickUpdate={handleTaskQuickUpdate}
+              collapsedTaskIds={collapsedTaskIds}
+              onDragOrderChange={handleDragOrderChange}
+              onOpenTaskDetail={openEditTaskDrawer}
+            />
+          </section>
+          <section className="right-panel panel-card">
+            <GanttBoard
+              language={language}
+              t={t}
+              tasks={visibleTasks}
+              selectedTaskId={selectedTaskId}
+              viewMode={viewMode}
+              columnWidth={zoom}
+              onSelectTask={setSelectedTaskId}
+              onDateChange={handleTaskDateChange}
+              onProgressChange={handleTaskProgressChange}
+            />
+          </section>
+        </main>
+      </div>
+
+      <TaskFormDrawer
+        language={language}
+        t={t}
+        open={isTaskDrawerOpen}
+        mode={taskFormMode}
+        projects={projects}
+        tasks={tasks}
+        activeProjectId={activeProjectId}
+        initialTask={editingTask}
+        onClose={() => setTaskDrawerOpen(false)}
+        onSubmit={handleTaskSubmit}
+      />
+      <ProjectDialog t={t} open={isProjectDialogOpen} onClose={() => setProjectDialogOpen(false)} onSubmit={handleProjectCreate} />
+    </div>
+  );
+};
+`r`n==================================================`r`nFILE: src\components\GanttBoard.tsx`r`n==================================================`r`n
+import { Gantt, Task as GanttTask, ViewMode } from "gantt-task-react";
+import { Language, TaskItem, ViewModeOption, VisibleTask } from "../types";
+import { toDate, toISODate } from "../utils/date";
+
+interface GanttBoardProps {
+  language: Language;
+  t: (key: "ganttEmpty") => string;
+  tasks: VisibleTask[];
+  selectedTaskId?: string;
+  viewMode: ViewModeOption;
+  columnWidth: number;
+  onSelectTask: (taskId: string) => void;
+  onDateChange: (taskId: string, startDate: string, endDate: string) => void;
+  onProgressChange: (taskId: string, progress: number) => void;
+}
+
+const statusColor = (status: TaskItem["status"]) => {
+  switch (status) {
+    case "completed":
+      return "#1aae39";
+    case "delayed":
+      return "#dd5b00";
+    case "in_progress":
+      return "#0075de";
+    default:
+      return "#a39e98";
+  }
+};
+
+const getViewMode = (viewMode: ViewModeOption): ViewMode => {
+  if (viewMode === "week") return ViewMode.Week;
+  if (viewMode === "month") return ViewMode.Month;
+  return ViewMode.Day;
+};
+
+export const GanttBoard = ({ language, t, tasks, selectedTaskId, viewMode, columnWidth, onSelectTask, onDateChange, onProgressChange }: GanttBoardProps) => {
+  const ganttTasks: GanttTask[] = tasks.map((item, index) => {
+    const color = statusColor(item.task.status);
+    const hasChild = tasks.some((row) => row.task.parentId === item.task.id);
+    return {
+      id: item.task.id,
+      name: item.task.name,
+      start: toDate(item.task.startDate),
+      end: toDate(item.task.endDate),
+      progress: item.task.progress,
+      type: item.task.isMilestone ? "milestone" : hasChild ? "project" : "task",
+      project: item.task.parentId,
+      dependencies: item.task.dependencyIds,
+      displayOrder: index,
+      styles: {
+        backgroundColor: color,
+        backgroundSelectedColor: "#005bab",
+        progressColor: "#62aef0",
+        progressSelectedColor: "#f2f9ff"
+      }
+    };
+  });
+
+  return (
+    <div className="gantt-wrapper notion-gantt-theme">
+      {ganttTasks.length === 0 ? (
+        <div className="gantt-empty">{t("ganttEmpty")}</div>
+      ) : (
+        <Gantt
+          tasks={ganttTasks}
+          viewMode={getViewMode(viewMode)}
+          locale={language === "zh" ? "zh-CN" : "en-US"}
+          listCellWidth="0px"
+          columnWidth={columnWidth}
+          todayColor="#f2f9ff"
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore gantt-task-react runtime supports selectedTaskId but type definitions miss it.
+          selectedTaskId={selectedTaskId}
+          onSelect={(task) => onSelectTask(String(task.id))}
+          onDateChange={(task) => {
+            onDateChange(String(task.id), toISODate(task.start), toISODate(task.end));
+            return true;
+          }}
+          onProgressChange={(task) => {
+            onProgressChange(String(task.id), task.progress);
+            return true;
+          }}
+        />
+      )}
+    </div>
+  );
+};
+`r`n==================================================`r`nFILE: src\components\ProjectDialog.tsx`r`n==================================================`r`n
+import { FormEvent, useEffect, useState } from "react";
+
+interface ProjectDialogProps {
+  t: (key: "createProject" | "projectName" | "projectDesc" | "projectNameRequired" | "cancel") => string;
+  open: boolean;
+  onClose: () => void;
+  onSubmit: (name: string, description: string) => void;
+}
+
+export const ProjectDialog = ({ t, open, onClose, onSubmit }: ProjectDialogProps) => {
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (open) {
+      setName("");
+      setDescription("");
+      setError("");
+    }
+  }, [open]);
+
+  if (!open) return null;
+
+  const handleSubmit = (event: FormEvent) => {
+    event.preventDefault();
+    if (!name.trim()) {
+      setError(t("projectNameRequired"));
+      return;
+    }
+    onSubmit(name.trim(), description.trim());
+  };
+
+  return (
+    <div className="drawer-backdrop" onClick={onClose}>
+      <aside className="drawer drawer-small" onClick={(event) => event.stopPropagation()}>
+        <h3>{t("createProject")}</h3>
+        <form className="drawer-form" onSubmit={handleSubmit}>
+          <label>
+            {t("projectName")}
+            <input value={name} onChange={(event) => setName(event.target.value)} />
+          </label>
+          <label>
+            {t("projectDesc")}
+            <textarea rows={3} value={description} onChange={(event) => setDescription(event.target.value)} />
+          </label>
+          {error ? <p className="error-text">{error}</p> : null}
+          <div className="drawer-actions">
+            <button type="button" className="btn btn-secondary" onClick={onClose}>
+              {t("cancel")}
+            </button>
+            <button type="submit" className="btn btn-primary">
+              {t("createProject")}
+            </button>
+          </div>
+        </form>
+      </aside>
+    </div>
+  );
+};
+`r`n==================================================`r`nFILE: src\components\TaskFormDrawer.tsx`r`n==================================================`r`n
+import { FormEvent, useEffect, useMemo, useState } from "react";
+import { v4 as uuidv4 } from "uuid";
+import { getPriorityLabel, getStatusLabel } from "../i18n";
+import { Language, ProjectItem, TaskItem } from "../types";
+import { calcDuration, normalizeDates } from "../utils/date";
+
+interface TaskFormDrawerProps {
+  language: Language;
+  t: (
+    key:
+      | "createTask"
+      | "editTask"
+      | "project"
+      | "parentTask"
+      | "none"
+      | "taskName"
+      | "start"
+      | "end"
+      | "milestone"
+      | "owner"
+      | "progress"
+      | "priority"
+      | "status"
+      | "dependencies"
+      | "notes"
+      | "cancel"
+      | "saveTask"
+      | "updateTask"
+      | "taskNameRequired"
+      | "ownerRequired"
+      | "progressInvalid"
+      | "parentInvalid"
+  ) => string;
+  open: boolean;
+  mode: "create" | "edit";
+  projects: ProjectItem[];
+  tasks: TaskItem[];
+  activeProjectId: string;
+  initialTask?: TaskItem;
+  onClose: () => void;
+  onSubmit: (task: TaskItem) => void;
+}
+
+interface TaskFormState {
+  projectId: string;
+  parentId: string;
+  name: string;
+  startDate: string;
+  endDate: string;
+  owner: string;
+  progress: number;
+  priority: TaskItem["priority"];
+  status: TaskItem["status"];
+  dependencyIds: string[];
+  notes: string;
+  isMilestone: boolean;
+}
+
+const toFormState = (task: TaskItem | undefined, defaultProjectId: string): TaskFormState => ({
+  projectId: task?.projectId ?? defaultProjectId,
+  parentId: task?.parentId ?? "",
+  name: task?.name ?? "",
+  startDate: task?.startDate ?? new Date().toISOString().slice(0, 10),
+  endDate: task?.endDate ?? new Date().toISOString().slice(0, 10),
+  owner: task?.owner ?? "",
+  progress: task?.progress ?? 0,
+  priority: task?.priority ?? "medium",
+  status: task?.status ?? "not_started",
+  dependencyIds: task?.dependencyIds ?? [],
+  notes: task?.notes ?? "",
+  isMilestone: task?.isMilestone ?? false
+});
+
+export const TaskFormDrawer = ({
+  language,
+  t,
+  open,
+  mode,
+  projects,
+  tasks,
+  activeProjectId,
+  initialTask,
+  onClose,
+  onSubmit
+}: TaskFormDrawerProps) => {
+  const [formState, setFormState] = useState<TaskFormState>(toFormState(initialTask, activeProjectId));
+  const [error, setError] = useState<string>("");
+
+  useEffect(() => {
+    if (open) {
+      setFormState(toFormState(initialTask, activeProjectId));
+      setError("");
+    }
+  }, [open, initialTask, activeProjectId]);
+
+  const availableTasks = useMemo(
+    () =>
+      tasks.filter((task) => task.projectId === formState.projectId && task.id !== initialTask?.id).sort((a, b) => a.order - b.order),
+    [tasks, formState.projectId, initialTask?.id]
+  );
+
+  if (!open) return null;
+
+  const handleSubmit = (event: FormEvent) => {
+    event.preventDefault();
+    if (!formState.name.trim()) {
+      setError(t("taskNameRequired"));
+      return;
+    }
+    if (!formState.owner.trim()) {
+      setError(t("ownerRequired"));
+      return;
+    }
+    const progress = Number(formState.progress);
+    if (Number.isNaN(progress) || progress < 0 || progress > 100) {
+      setError(t("progressInvalid"));
+      return;
+    }
+    if (formState.parentId && formState.parentId === initialTask?.id) {
+      setError(t("parentInvalid"));
+      return;
+    }
+
+    const normalized = normalizeDates(formState.startDate, formState.endDate);
+    const nextTask: TaskItem = {
+      id: initialTask?.id ?? `task-${uuidv4()}`,
+      projectId: formState.projectId,
+      parentId: formState.parentId || undefined,
+      name: formState.name.trim(),
+      startDate: normalized.startDate,
+      endDate: formState.isMilestone ? normalized.startDate : normalized.endDate,
+      duration: formState.isMilestone ? 1 : calcDuration(normalized.startDate, normalized.endDate),
+      owner: formState.owner.trim(),
+      progress: progress,
+      priority: formState.priority,
+      status: formState.status,
+      dependencyIds: formState.dependencyIds,
+      notes: formState.notes.trim(),
+      isMilestone: formState.isMilestone,
+      order: initialTask?.order ?? (tasks.filter((task) => task.projectId === formState.projectId).length + 1) * 10
+    };
+    onSubmit(nextTask);
+  };
+
+  const setField = <K extends keyof TaskFormState>(key: K, value: TaskFormState[K]) => {
+    setFormState((prev) => ({ ...prev, [key]: value }));
+  };
+
+  return (
+    <div className="drawer-backdrop" onClick={onClose}>
+      <aside className="drawer" onClick={(event) => event.stopPropagation()}>
+        <h3>{mode === "create" ? t("createTask") : t("editTask")}</h3>
+        <form onSubmit={handleSubmit} className="drawer-form">
+          <label>
+            {t("project")}
+            <select value={formState.projectId} onChange={(event) => setField("projectId", event.target.value)}>
+              {projects.map((project) => (
+                <option key={project.id} value={project.id}>
+                  {project.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            {t("parentTask")}
+            <select value={formState.parentId} onChange={(event) => setField("parentId", event.target.value)}>
+              <option value="">{t("none")}</option>
+              {availableTasks.map((task) => (
+                <option key={task.id} value={task.id}>
+                  {task.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            {t("taskName")}
+            <input value={formState.name} onChange={(event) => setField("name", event.target.value)} />
+          </label>
+          <div className="form-row">
+            <label>
+              {t("start")}
+              <input type="date" value={formState.startDate} onChange={(event) => setField("startDate", event.target.value)} />
+            </label>
+            <label>
+              {t("end")}
+              <input
+                type="date"
+                value={formState.isMilestone ? formState.startDate : formState.endDate}
+                disabled={formState.isMilestone}
+                onChange={(event) => setField("endDate", event.target.value)}
+              />
+            </label>
+          </div>
+          <label className="checkbox-row">
+            <input type="checkbox" checked={formState.isMilestone} onChange={(event) => setField("isMilestone", event.target.checked)} />
+            {t("milestone")}
+          </label>
+          <div className="form-row">
+            <label>
+              {t("owner")}
+              <input value={formState.owner} onChange={(event) => setField("owner", event.target.value)} />
+            </label>
+            <label>
+              {t("progress")}
+              <input type="number" min={0} max={100} value={formState.progress} onChange={(event) => setField("progress", Number(event.target.value))} />
+            </label>
+          </div>
+          <div className="form-row">
+            <label>
+              {t("priority")}
+              <select value={formState.priority} onChange={(event) => setField("priority", event.target.value as TaskItem["priority"])}>
+                <option value="high">{getPriorityLabel(language, "high")}</option>
+                <option value="medium">{getPriorityLabel(language, "medium")}</option>
+                <option value="low">{getPriorityLabel(language, "low")}</option>
+              </select>
+            </label>
+            <label>
+              {t("status")}
+              <select value={formState.status} onChange={(event) => setField("status", event.target.value as TaskItem["status"])}>
+                <option value="not_started">{getStatusLabel(language, "not_started")}</option>
+                <option value="in_progress">{getStatusLabel(language, "in_progress")}</option>
+                <option value="completed">{getStatusLabel(language, "completed")}</option>
+                <option value="delayed">{getStatusLabel(language, "delayed")}</option>
+              </select>
+            </label>
+          </div>
+          <label>
+            {t("dependencies")}
+            <select
+              multiple
+              value={formState.dependencyIds}
+              onChange={(event) =>
+                setField(
+                  "dependencyIds",
+                  Array.from(event.target.selectedOptions).map((option) => option.value)
+                )
+              }
+            >
+              {availableTasks.map((task) => (
+                <option key={task.id} value={task.id}>
+                  {task.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            {t("notes")}
+            <textarea rows={3} value={formState.notes} onChange={(event) => setField("notes", event.target.value)} />
+          </label>
+          {error ? <p className="error-text">{error}</p> : null}
+          <div className="drawer-actions">
+            <button type="button" className="btn btn-secondary" onClick={onClose}>
+              {t("cancel")}
+            </button>
+            <button type="submit" className="btn btn-primary">
+              {mode === "create" ? t("saveTask") : t("updateTask")}
+            </button>
+          </div>
+        </form>
+      </aside>
+    </div>
+  );
+};
+`r`n==================================================`r`nFILE: src\components\TaskTable.tsx`r`n==================================================`r`n
+import { useState } from "react";
+import { DndContext, DragEndEvent, PointerSensor, closestCenter, useSensor, useSensors } from "@dnd-kit/core";
+import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { getStatusLabel } from "../i18n";
+import { Language, TaskItem, VisibleTask } from "../types";
+
+interface TaskTableProps {
+  language: Language;
+  t: (key: "taskName" | "owner" | "status" | "start" | "end" | "duration" | "progress" | "dependencies" | "noTasks" | "quickDelete" | "daySuffix") => string;
+  tasks: VisibleTask[];
+  selectedTaskId?: string;
+  onSelectTask: (taskId: string) => void;
+  onDeleteTask: (taskId: string) => void;
+  onToggleCollapse: (taskId: string) => void;
+  onChangeProgress: (taskId: string, progress: number) => void;
+  onQuickUpdate: (taskId: string, patch: Partial<TaskItem>) => void;
+  collapsedTaskIds: Set<string>;
+  onDragOrderChange: (activeId: string, overId: string) => void;
+  onOpenTaskDetail: (taskId: string) => void;
+}
+
+interface RowProps {
+  language: Language;
+  t: TaskTableProps["t"];
+  row: VisibleTask;
+  selectedTaskId?: string;
+  editingCell: { taskId: string; field: "name" | "owner" } | null;
+  setEditingCell: (cell: { taskId: string; field: "name" | "owner" } | null) => void;
+  onSelectTask: (taskId: string) => void;
+  onDeleteTask: (taskId: string) => void;
+  onToggleCollapse: (taskId: string) => void;
+  onChangeProgress: (taskId: string, progress: number) => void;
+  onQuickUpdate: (taskId: string, patch: Partial<TaskItem>) => void;
+  collapsedTaskIds: Set<string>;
+  onOpenTaskDetail: (taskId: string) => void;
+}
+
+const SortableRow = ({
+  language,
+  t,
+  row,
+  selectedTaskId,
+  editingCell,
+  setEditingCell,
+  onSelectTask,
+  onDeleteTask,
+  onToggleCollapse,
+  onChangeProgress,
+  onQuickUpdate,
+  collapsedTaskIds,
+  onOpenTaskDetail
+}: RowProps) => {
+  const statusClassMap: Record<string, string> = {
+    not_started: "status-not-started",
+    in_progress: "status-in-progress",
+    completed: "status-completed",
+    delayed: "status-delayed"
+  };
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: row.task.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.6 : 1
+  };
+  const indent = row.depth * 18;
+  const isSelected = selectedTaskId === row.task.id;
+  const isEditingName = editingCell?.taskId === row.task.id && editingCell.field === "name";
+  const isEditingOwner = editingCell?.taskId === row.task.id && editingCell.field === "owner";
+
+  return (
+    <tr
+      ref={setNodeRef}
+      style={style}
+      className={isSelected ? "selected-row" : undefined}
+      onClick={() => onSelectTask(row.task.id)}
+      onDoubleClick={() => onOpenTaskDetail(row.task.id)}
+      title={row.task.notes}
+    >
+      <td>
+        <div className="left-cell-actions">
+          <button className="drag-handle" {...attributes} {...listeners} title={language === "zh" ? "\u62d6\u62fd\u6392\u5e8f" : "Drag to reorder"}>
+            ::
+          </button>
+          <button
+            className="cell-delete-btn"
+            title={t("quickDelete")}
+            onClick={(event) => {
+              event.stopPropagation();
+              onDeleteTask(row.task.id);
+            }}
+          >
+            x
+          </button>
+        </div>
+      </td>
+      <td>
+        <div className="task-name-cell" style={{ paddingLeft: `${indent}px` }}>
+          {row.hasChildren ? (
+            <button
+              type="button"
+              className="icon-btn"
+              onClick={(event) => {
+                event.stopPropagation();
+                onToggleCollapse(row.task.id);
+              }}
+              title={language === "zh" ? "\u6298\u53e0/\u5c55\u5f00" : "Expand / Collapse"}
+            >
+              {collapsedTaskIds.has(row.task.id) ? ">" : "v"}
+            </button>
+          ) : (
+            <span className="placeholder-indent" />
+          )}
+          {isEditingName ? (
+            <input
+              autoFocus
+              className="cell-editor"
+              value={row.task.name}
+              onClick={(event) => event.stopPropagation()}
+              onChange={(event) => onQuickUpdate(row.task.id, { name: event.target.value })}
+              onBlur={() => setEditingCell(null)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === "Escape") setEditingCell(null);
+              }}
+            />
+          ) : (
+            <span onDoubleClick={() => setEditingCell({ taskId: row.task.id, field: "name" })}>
+              {row.task.isMilestone ? `* ${row.task.name}` : row.task.name}
+            </span>
+          )}
+        </div>
+      </td>
+      <td>
+        {isEditingOwner ? (
+          <input
+            autoFocus
+            className="cell-editor"
+            value={row.task.owner}
+            onClick={(event) => event.stopPropagation()}
+            onChange={(event) => onQuickUpdate(row.task.id, { owner: event.target.value })}
+            onBlur={() => setEditingCell(null)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === "Escape") setEditingCell(null);
+            }}
+          />
+        ) : (
+          <span onDoubleClick={() => setEditingCell({ taskId: row.task.id, field: "owner" })}>{row.task.owner}</span>
+        )}
+      </td>
+      <td className={`status-cell ${statusClassMap[row.task.status] ?? ""}`}>
+        <select
+          className="inline-select"
+          value={row.task.status}
+          onClick={(event) => event.stopPropagation()}
+          onChange={(event) => onQuickUpdate(row.task.id, { status: event.target.value as TaskItem["status"] })}
+        >
+          <option value="not_started">{getStatusLabel(language, "not_started")}</option>
+          <option value="in_progress">{getStatusLabel(language, "in_progress")}</option>
+          <option value="completed">{getStatusLabel(language, "completed")}</option>
+          <option value="delayed">{getStatusLabel(language, "delayed")}</option>
+        </select>
+      </td>
+      <td>
+        <input
+          type="date"
+          className="inline-date"
+          value={row.task.startDate}
+          onClick={(event) => event.stopPropagation()}
+          onChange={(event) => onQuickUpdate(row.task.id, { startDate: event.target.value })}
+        />
+      </td>
+      <td>
+        <input
+          type="date"
+          className="inline-date"
+          value={row.task.endDate}
+          onClick={(event) => event.stopPropagation()}
+          onChange={(event) => onQuickUpdate(row.task.id, { endDate: event.target.value })}
+        />
+      </td>
+      <td>{`${row.task.duration}${t("daySuffix")}`}</td>
+      <td>
+        <div className="progress-inline">
+          <input
+            type="range"
+            min={0}
+            max={100}
+            value={row.task.progress}
+            onClick={(event) => event.stopPropagation()}
+            onChange={(event) => onChangeProgress(row.task.id, Number(event.target.value))}
+          />
+          <span>{`${row.task.progress}%`}</span>
+        </div>
+      </td>
+      <td>{row.task.dependencyIds.length > 0 ? row.task.dependencyIds.join(", ") : "-"}</td>
+    </tr>
+  );
+};
+
+export const TaskTable = ({
+  language,
+  t,
+  tasks,
+  selectedTaskId,
+  onSelectTask,
+  onDeleteTask,
+  onToggleCollapse,
+  onChangeProgress,
+  onQuickUpdate,
+  collapsedTaskIds,
+  onDragOrderChange,
+  onOpenTaskDetail
+}: TaskTableProps) => {
+  const [editingCell, setEditingCell] = useState<{ taskId: string; field: "name" | "owner" } | null>(null);
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 6 }
+    })
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    onDragOrderChange(String(active.id), String(over.id));
+  };
+
+  return (
+    <div className="task-table-wrapper">
+      <table className="task-table excel-like-table">
+        <colgroup>
+          <col style={{ width: 56 }} />
+          <col style={{ width: 280 }} />
+          <col style={{ width: 120 }} />
+          <col style={{ width: 150 }} />
+          <col style={{ width: 140 }} />
+          <col style={{ width: 140 }} />
+          <col style={{ width: 76 }} />
+          <col style={{ width: 140 }} />
+          <col style={{ width: 140 }} />
+        </colgroup>
+        <thead>
+          <tr>
+            <th />
+            <th>{t("taskName")}</th>
+            <th>{t("owner")}</th>
+            <th>{t("status")}</th>
+            <th>{t("start")}</th>
+            <th>{t("end")}</th>
+            <th>{t("duration")}</th>
+            <th>{t("progress")}</th>
+            <th>{t("dependencies")}</th>
+          </tr>
+        </thead>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext items={tasks.map((item) => item.task.id)} strategy={verticalListSortingStrategy}>
+            <tbody>
+              {tasks.map((row) => (
+                <SortableRow
+                  key={row.task.id}
+                  language={language}
+                  t={t}
+                  row={row}
+                  selectedTaskId={selectedTaskId}
+                  editingCell={editingCell}
+                  setEditingCell={setEditingCell}
+                  onSelectTask={onSelectTask}
+                  onDeleteTask={onDeleteTask}
+                  onToggleCollapse={onToggleCollapse}
+                  onChangeProgress={onChangeProgress}
+                  onQuickUpdate={onQuickUpdate}
+                  collapsedTaskIds={collapsedTaskIds}
+                  onOpenTaskDetail={onOpenTaskDetail}
+                />
+              ))}
+              {tasks.length === 0 ? (
+                <tr>
+                  <td colSpan={9} className="empty-cell">
+                    {t("noTasks")}
+                  </td>
+                </tr>
+              ) : null}
+            </tbody>
+          </SortableContext>
+        </DndContext>
+      </table>
+    </div>
+  );
+};
+`r`n==================================================`r`nFILE: src\components\Toolbar.tsx`r`n==================================================`r`n
+import { SORT_OPTIONS, VIEW_MODE_OPTIONS, getSortLabel, getStatusLabel, getViewModeLabel } from "../i18n";
+import { Language, SortBy, TaskFilters, ViewModeOption } from "../types";
+
+interface ToolbarProps {
+  language: Language;
+  t: (key: "searchPlaceholder" | "allOwners" | "allStatuses" | "allPriorities" | "sortPrefix" | "zoom" | "addTask") => string;
+  searchText: string;
+  onSearchTextChange: (value: string) => void;
+  filters: TaskFilters;
+  owners: string[];
+  onFiltersChange: (next: TaskFilters) => void;
+  sortBy: SortBy;
+  onSortByChange: (value: SortBy) => void;
+  viewMode: ViewModeOption;
+  onViewModeChange: (value: ViewModeOption) => void;
+  zoom: number;
+  onZoomChange: (value: number) => void;
+  onAddTask: () => void;
+}
+
+export const Toolbar = ({
+  language,
+  t,
+  searchText,
+  onSearchTextChange,
+  filters,
+  owners,
+  onFiltersChange,
+  sortBy,
+  onSortByChange,
+  viewMode,
+  onViewModeChange,
+  zoom,
+  onZoomChange,
+  onAddTask
+}: ToolbarProps) => (
+  <div className="toolbar">
+    <div className="toolbar-left">
+      <input className="input input-search" placeholder={t("searchPlaceholder")} value={searchText} onChange={(event) => onSearchTextChange(event.target.value)} />
+      <select className="input" value={filters.owner} onChange={(event) => onFiltersChange({ ...filters, owner: event.target.value })}>
+        <option value="all">{t("allOwners")}</option>
+        {owners.map((owner) => (
+          <option key={owner} value={owner}>
+            {owner}
+          </option>
+        ))}
+      </select>
+      <select className="input" value={filters.status} onChange={(event) => onFiltersChange({ ...filters, status: event.target.value as TaskFilters["status"] })}>
+        <option value="all">{t("allStatuses")}</option>
+        <option value="not_started">{getStatusLabel(language, "not_started")}</option>
+        <option value="in_progress">{getStatusLabel(language, "in_progress")}</option>
+        <option value="completed">{getStatusLabel(language, "completed")}</option>
+        <option value="delayed">{getStatusLabel(language, "delayed")}</option>
+      </select>
+      <select className="input" value={filters.priority} onChange={(event) => onFiltersChange({ ...filters, priority: event.target.value as TaskFilters["priority"] })}>
+        <option value="all">{t("allPriorities")}</option>
+        <option value="high">{language === "zh" ? "\u9ad8" : "High"}</option>
+        <option value="medium">{language === "zh" ? "\u4e2d" : "Medium"}</option>
+        <option value="low">{language === "zh" ? "\u4f4e" : "Low"}</option>
+      </select>
+      <select className="input" value={sortBy} onChange={(event) => onSortByChange(event.target.value as SortBy)}>
+        {SORT_OPTIONS.map((option) => (
+          <option key={option} value={option}>
+            {`${t("sortPrefix")}: ${getSortLabel(language, option)}`}
+          </option>
+        ))}
+      </select>
+    </div>
+    <div className="toolbar-right">
+      <select className="input" value={viewMode} onChange={(event) => onViewModeChange(event.target.value as ViewModeOption)}>
+        {VIEW_MODE_OPTIONS.map((option) => (
+          <option key={option} value={option}>
+            {getViewModeLabel(language, option)}
+          </option>
+        ))}
+      </select>
+      <label className="zoom-control">
+        {t("zoom")}
+        <input type="range" min={40} max={140} value={zoom} onChange={(event) => onZoomChange(Number(event.target.value))} />
+      </label>
+      <button className="btn btn-primary" onClick={onAddTask}>
+        {t("addTask")}
+      </button>
+    </div>
+  </div>
+);
+`r`n==================================================`r`nFILE: src\data\defaultData.ts`r`n==================================================`r`n
+import { PersistedState, TaskItem } from "../types";
+import { calcDuration } from "../utils/date";
+
+const createTask = (task: Omit<TaskItem, "duration">): TaskItem => ({
+  ...task,
+  duration: calcDuration(task.startDate, task.endDate)
+});
+
+export const defaultState: PersistedState = {
+  projects: [
+    {
+      id: "project-ccsa-main",
+      name: "CCSA\u4e3b\u9879\u76ee / CCSA Main Project",
+      description: "\u9ed8\u8ba4\u793a\u4f8b\u5de5\u7a0b\uff0c\u5305\u542b\u5b8c\u6574\u9636\u6bb5\u4efb\u52a1"
+    }
+  ],
+  activeProjectId: "project-ccsa-main",
+  tasks: [
+    createTask({
+      id: "task-design-parent",
+      projectId: "project-ccsa-main",
+      name: "\u8bbe\u8ba1 / Design",
+      startDate: "2026-04-01",
+      endDate: "2026-04-12",
+      owner: "\u674e\u5de5",
+      progress: 100,
+      priority: "high",
+      status: "completed",
+      dependencyIds: [],
+      notes: "\u5b8c\u6210\u603b\u56fe\u4e0e\u65bd\u5de5\u56fe\u8bbe\u8ba1",
+      isMilestone: false,
+      order: 10
+    }),
+    createTask({
+      id: "task-design-review",
+      projectId: "project-ccsa-main",
+      parentId: "task-design-parent",
+      name: "\u65b9\u6848\u8bbe\u8ba1\u4e0e\u8bc4\u5ba1 / Design Review",
+      startDate: "2026-04-01",
+      endDate: "2026-04-05",
+      owner: "\u674e\u5de5",
+      progress: 100,
+      priority: "high",
+      status: "completed",
+      dependencyIds: [],
+      notes: "\u786e\u8ba4\u8bbe\u8ba1\u65b9\u6848\u5e76\u8bc4\u5ba1\u901a\u8fc7",
+      isMilestone: false,
+      order: 11
+    }),
+    createTask({
+      id: "task-design-delivery",
+      projectId: "project-ccsa-main",
+      parentId: "task-design-parent",
+      name: "\u65bd\u5de5\u56fe\u4ea4\u4ed8 / Drawing Delivery",
+      startDate: "2026-04-06",
+      endDate: "2026-04-12",
+      owner: "\u5468\u5de5",
+      progress: 100,
+      priority: "medium",
+      status: "completed",
+      dependencyIds: ["task-design-review"],
+      notes: "\u56fe\u7eb8\u5f52\u6863\u5b8c\u6210",
+      isMilestone: false,
+      order: 12
+    }),
+    createTask({
+      id: "task-procurement",
+      projectId: "project-ccsa-main",
+      name: "\u91c7\u8d2d / Procurement",
+      startDate: "2026-04-13",
+      endDate: "2026-04-24",
+      owner: "\u738b\u7ecf\u7406",
+      progress: 65,
+      priority: "high",
+      status: "in_progress",
+      dependencyIds: ["task-design-delivery"],
+      notes: "\u8bbe\u5907\u4e0e\u4e3b\u6750\u5206\u6279\u91c7\u8d2d",
+      isMilestone: false,
+      order: 20
+    }),
+    createTask({
+      id: "task-construction",
+      projectId: "project-ccsa-main",
+      name: "\u65bd\u5de5 / Construction",
+      startDate: "2026-04-25",
+      endDate: "2026-05-20",
+      owner: "\u9648\u5de5",
+      progress: 30,
+      priority: "high",
+      status: "in_progress",
+      dependencyIds: ["task-procurement"],
+      notes: "\u73b0\u573a\u5b89\u88c5\u4e0e\u7cfb\u7edf\u96c6\u6210",
+      isMilestone: false,
+      order: 30
+    }),
+    createTask({
+      id: "task-commissioning",
+      projectId: "project-ccsa-main",
+      name: "\u8c03\u8bd5 / Commissioning",
+      startDate: "2026-05-21",
+      endDate: "2026-05-30",
+      owner: "\u8d75\u5de5",
+      progress: 0,
+      priority: "medium",
+      status: "not_started",
+      dependencyIds: ["task-construction"],
+      notes: "\u8054\u8c03\u3001\u6545\u969c\u6e05\u5355\u5904\u7406",
+      isMilestone: false,
+      order: 40
+    }),
+    createTask({
+      id: "task-acceptance",
+      projectId: "project-ccsa-main",
+      name: "\u9a8c\u6536\u91cc\u7a0b\u7891 / Acceptance",
+      startDate: "2026-06-02",
+      endDate: "2026-06-02",
+      owner: "\u9879\u76ee\u529e",
+      progress: 0,
+      priority: "high",
+      status: "not_started",
+      dependencyIds: ["task-commissioning"],
+      notes: "\u7ec4\u7ec7\u6700\u7ec8\u9a8c\u6536\u4f1a\u8bae",
+      isMilestone: true,
+      order: 50
+    })
+  ]
+};
+`r`n==================================================`r`nFILE: src\i18n.ts`r`n==================================================`r`n
+import { Language, SortBy, TaskPriority, TaskStatus, ViewModeOption } from "./types";
+
+export const STATUS_OPTIONS: TaskStatus[] = ["not_started", "in_progress", "completed", "delayed"];
+export const PRIORITY_OPTIONS: TaskPriority[] = ["high", "medium", "low"];
+export const VIEW_MODE_OPTIONS: ViewModeOption[] = ["day", "week", "month"];
+export const SORT_OPTIONS: SortBy[] = ["default", "name", "startDate", "endDate", "progress", "priority"];
+
+const statusLabels: Record<TaskStatus, { zh: string; en: string }> = {
+  not_started: { zh: "\u672a\u5f00\u59cb", en: "Not Started" },
+  in_progress: { zh: "\u8fdb\u884c\u4e2d", en: "In Progress" },
+  completed: { zh: "\u5df2\u5b8c\u6210", en: "Completed" },
+  delayed: { zh: "\u5ef6\u671f", en: "Delayed" }
+};
+
+const priorityLabels: Record<TaskPriority, { zh: string; en: string }> = {
+  high: { zh: "\u9ad8", en: "High" },
+  medium: { zh: "\u4e2d", en: "Medium" },
+  low: { zh: "\u4f4e", en: "Low" }
+};
+
+const viewModeLabels: Record<ViewModeOption, { zh: string; en: string }> = {
+  day: { zh: "\u65e5\u89c6\u56fe", en: "Day View" },
+  week: { zh: "\u5468\u89c6\u56fe", en: "Week View" },
+  month: { zh: "\u6708\u89c6\u56fe", en: "Month View" }
+};
+
+const sortLabels: Record<SortBy, { zh: string; en: string }> = {
+  default: { zh: "\u9ed8\u8ba4", en: "Default" },
+  name: { zh: "\u540d\u79f0", en: "Name" },
+  startDate: { zh: "\u5f00\u59cb\u65e5\u671f", en: "Start Date" },
+  endDate: { zh: "\u7ed3\u675f\u65e5\u671f", en: "End Date" },
+  progress: { zh: "\u8fdb\u5ea6", en: "Progress" },
+  priority: { zh: "\u4f18\u5148\u7ea7", en: "Priority" }
+};
+
+const texts = {
+  appTitle: { zh: "CCSA\u9879\u76ee\u7ba1\u7406", en: "CCSA Project Management" },
+  appSubtitle: {
+    zh: "\u7b80\u6d01\u3001\u7a33\u5b9a\u3001\u53ef\u7ef4\u62a4\u7684\u7518\u7279\u56fe\u9879\u76ee\u534f\u540c\u9762\u677f",
+    en: "Simple, clean, and stable Gantt project workspace"
+  },
+  language: { zh: "\u8bed\u8a00", en: "Language" },
+  addProject: { zh: "\u65b0\u589e\u9879\u76ee", en: "New Project" },
+  addTask: { zh: "\u65b0\u589e\u4efb\u52a1", en: "New Task" },
+  searchPlaceholder: { zh: "\u641c\u7d22\u4efb\u52a1\u540d\u79f0/\u8d1f\u8d23\u4eba/\u5907\u6ce8", en: "Search task / owner / notes" },
+  allOwners: { zh: "\u5168\u90e8\u8d1f\u8d23\u4eba", en: "All Owners" },
+  allStatuses: { zh: "\u5168\u90e8\u72b6\u6001", en: "All Statuses" },
+  allPriorities: { zh: "\u5168\u90e8\u4f18\u5148\u7ea7", en: "All Priorities" },
+  sortPrefix: { zh: "\u6392\u5e8f", en: "Sort" },
+  zoom: { zh: "\u7f29\u653e", en: "Zoom" },
+  taskName: { zh: "\u4efb\u52a1\u540d\u79f0", en: "Task Name" },
+  owner: { zh: "\u8d1f\u8d23\u4eba", en: "Owner" },
+  status: { zh: "\u72b6\u6001", en: "Status" },
+  start: { zh: "\u5f00\u59cb", en: "Start" },
+  end: { zh: "\u7ed3\u675f", en: "End" },
+  duration: { zh: "\u5de5\u671f", en: "Duration" },
+  progress: { zh: "\u8fdb\u5ea6", en: "Progress" },
+  dependencies: { zh: "\u4f9d\u8d56", en: "Dependencies" },
+  noTasks: { zh: "\u6682\u65e0\u4efb\u52a1\uff0c\u8bf7\u65b0\u589e\u4efb\u52a1\u3002", en: "No tasks yet. Add a task to start." },
+  quickDelete: { zh: "\u5220\u9664", en: "Delete" },
+  openAdvancedEdit: { zh: "\u53cc\u51fb\u6253\u5f00\u8be6\u7ec6\u7f16\u8f91", en: "Double-click for full edit" },
+  ganttEmpty: {
+    zh: "\u6682\u65e0\u53ef\u5c55\u793a\u4efb\u52a1\uff0c\u8bf7\u5148\u521b\u5efa\u4efb\u52a1\u6216\u8c03\u6574\u7b5b\u9009\u6761\u4ef6\u3002",
+    en: "No task to display. Create tasks or adjust filters."
+  },
+  project: { zh: "\u9879\u76ee", en: "Project" },
+  parentTask: { zh: "\u7236\u4efb\u52a1", en: "Parent Task" },
+  none: { zh: "\u65e0", en: "None" },
+  milestone: { zh: "\u8bbe\u4e3a\u91cc\u7a0b\u7891", en: "Milestone" },
+  priority: { zh: "\u4f18\u5148\u7ea7", en: "Priority" },
+  notes: { zh: "\u5907\u6ce8", en: "Notes" },
+  cancel: { zh: "\u53d6\u6d88", en: "Cancel" },
+  saveTask: { zh: "\u4fdd\u5b58\u4efb\u52a1", en: "Save Task" },
+  updateTask: { zh: "\u66f4\u65b0\u4efb\u52a1", en: "Update Task" },
+  createTask: { zh: "\u65b0\u589e\u4efb\u52a1", en: "Create Task" },
+  editTask: { zh: "\u7f16\u8f91\u4efb\u52a1", en: "Edit Task" },
+  createProject: { zh: "\u521b\u5efa\u9879\u76ee", en: "Create Project" },
+  projectName: { zh: "\u9879\u76ee\u540d\u79f0", en: "Project Name" },
+  projectDesc: { zh: "\u9879\u76ee\u63cf\u8ff0", en: "Project Description" },
+  taskNameRequired: { zh: "\u4efb\u52a1\u540d\u79f0\u4e0d\u80fd\u4e3a\u7a7a\u3002", en: "Task name is required." },
+  ownerRequired: { zh: "\u8d1f\u8d23\u4eba\u4e0d\u80fd\u4e3a\u7a7a\u3002", en: "Owner is required." },
+  progressInvalid: { zh: "\u8fdb\u5ea6\u5fc5\u987b\u662f 0-100 \u4e4b\u95f4\u7684\u6570\u5b57\u3002", en: "Progress must be between 0 and 100." },
+  parentInvalid: { zh: "\u7236\u4efb\u52a1\u4e0d\u80fd\u9009\u62e9\u5f53\u524d\u4efb\u52a1\u3002", en: "Parent task cannot be current task." },
+  projectNameRequired: { zh: "\u9879\u76ee\u540d\u79f0\u4e0d\u80fd\u4e3a\u7a7a\u3002", en: "Project name is required." },
+  daySuffix: { zh: "\u5929", en: "d" }
+} as const;
+
+export type TranslationKey = keyof typeof texts;
+
+export const createTranslator = (language: Language) => (key: TranslationKey): string => texts[key][language];
+
+export const getStatusLabel = (language: Language, status: TaskStatus): string => statusLabels[status][language];
+export const getPriorityLabel = (language: Language, priority: TaskPriority): string => priorityLabels[priority][language];
+export const getViewModeLabel = (language: Language, mode: ViewModeOption): string => viewModeLabels[mode][language];
+export const getSortLabel = (language: Language, sort: SortBy): string => sortLabels[sort][language];
+`r`n==================================================`r`nFILE: src\main.tsx`r`n==================================================`r`n
+import React from "react";
+import ReactDOM from "react-dom/client";
+import "gantt-task-react/dist/index.css";
+import "./styles.css";
+import { App } from "./App";
+
+ReactDOM.createRoot(document.getElementById("root")!).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+`r`n==================================================`r`nFILE: src\styles.css`r`n==================================================`r`n
+:root {
+  --notion-bg: #ffffff;
+  --notion-bg-warm: #f6f5f4;
+  --notion-text: rgba(0, 0, 0, 0.95);
+  --notion-text-secondary: #615d59;
+  --notion-text-muted: #a39e98;
+  --notion-border: rgba(0, 0, 0, 0.1);
+  --notion-blue: #0075de;
+  --notion-blue-active: #005bab;
+  --notion-blue-badge-bg: #f2f9ff;
+  --notion-blue-badge-text: #097fe8;
+  --notion-shadow: rgba(0, 0, 0, 0.04) 0px 4px 18px, rgba(0, 0, 0, 0.027) 0px 2.025px 7.84688px,
+    rgba(0, 0, 0, 0.02) 0px 0.8px 2.925px, rgba(0, 0, 0, 0.01) 0px 0.175px 1.04062px;
+  --radius-micro: 4px;
+  --radius-card: 12px;
+  --radius-soft: 8px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  color: var(--notion-text);
+  background: var(--notion-bg-warm);
+  font-family: "NotionInter", Inter, -apple-system, system-ui, "Segoe UI", Helvetica, Arial, "PingFang SC",
+    "Microsoft YaHei", sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+input,
+select,
+textarea,
+button {
+  font: inherit;
+}
+
+.app-shell {
+  min-height: 100vh;
+}
+
+.app-header {
+  background: var(--notion-bg);
+  border-bottom: 1px solid var(--notion-border);
+}
+
+.header-inner {
+  max-width: none;
+  width: 100%;
+  margin: 0 auto;
+  min-height: 76px;
+  padding: 14px 20px 13px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.header-title-group h1 {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.625px;
+  line-height: 1.2;
+}
+
+.header-title-group p {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: var(--notion-text-secondary);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.language-toggle {
+  display: inline-flex;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.lang-btn {
+  border: none;
+  background: transparent;
+  color: #615d59;
+  height: 30px;
+  min-width: 38px;
+  padding: 0 10px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.lang-btn.active {
+  background: #0075de;
+  color: #fff;
+}
+
+.content-wrap {
+  max-width: none;
+  width: 100%;
+  margin: 0 auto;
+  padding: 10px 12px 14px;
+}
+
+.header-inner-full {
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+.content-wrap-full {
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+.toolbar {
+  padding: 10px 10px 9px;
+  background: var(--notion-bg);
+  border: 1px solid var(--notion-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--notion-shadow);
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.toolbar-left,
+.toolbar-right {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.input-search {
+  min-width: 260px;
+}
+
+.input,
+.header-actions select {
+  height: 32px;
+  min-width: 120px;
+  border: 1px solid #dddddd;
+  border-radius: var(--radius-micro);
+  padding: 0 10px;
+  background: var(--notion-bg);
+  color: var(--notion-text);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+.input:focus-visible,
+.header-actions select:focus-visible,
+.drawer-form input:focus-visible,
+.drawer-form select:focus-visible,
+.drawer-form textarea:focus-visible {
+  outline: 2px solid #097fe8;
+  outline-offset: 1px;
+  box-shadow: 0 0 0 2px rgba(9, 127, 232, 0.1);
+}
+
+.input::placeholder {
+  color: var(--notion-text-muted);
+}
+
+.btn {
+  border: 1px solid transparent;
+  border-radius: var(--radius-micro);
+  padding: 7px 14px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.33;
+  transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-primary {
+  background: var(--notion-blue);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: var(--notion-blue-active);
+  box-shadow: rgba(0, 117, 222, 0.25) 0 2px 8px;
+}
+
+.btn-primary:active {
+  transform: scale(0.97);
+}
+
+.btn-secondary {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--notion-text);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+.btn-secondary:hover {
+  background: rgba(0, 0, 0, 0.08);
+  transform: scale(1.015);
+}
+
+.btn-secondary:active {
+  transform: scale(0.98);
+}
+
+.main-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 48%) minmax(0, 52%);
+  gap: 12px;
+  min-height: calc(100vh - 190px);
+}
+
+.main-layout-dense {
+  gap: 8px;
+  min-height: calc(100vh - 150px);
+}
+
+.panel-card {
+  background: var(--notion-bg);
+  border: 1px solid var(--notion-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--notion-shadow);
+  overflow: hidden;
+  min-height: 0;
+}
+
+.panel-card:hover {
+  box-shadow: rgba(0, 0, 0, 0.05) 0px 6px 22px, rgba(0, 0, 0, 0.03) 0px 2px 8px, rgba(0, 0, 0, 0.02) 0px 1px 3px;
+}
+
+.task-table-wrapper {
+  height: 100%;
+  overflow: auto;
+}
+
+.task-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  table-layout: fixed;
+}
+
+.task-table th,
+.task-table td {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  padding: 7px 7px;
+  white-space: nowrap;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.excel-like-table tbody td {
+  border-right: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.excel-like-table tbody td:last-child,
+.excel-like-table thead th:last-child {
+  border-right: none;
+}
+
+.task-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--notion-bg-warm);
+  color: var(--notion-text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.125px;
+  height: 34px;
+}
+
+.selected-row {
+  background: #f9fbff;
+}
+
+.task-table tbody tr:hover {
+  background: #fafaf9;
+}
+
+.task-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.task-name-cell span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.left-cell-actions {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.cell-delete-btn {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  width: 20px;
+  height: 20px;
+  background: rgba(0, 0, 0, 0.04);
+  color: #8d2a2a;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.cell-delete-btn:hover {
+  background: rgba(141, 42, 42, 0.1);
+}
+
+.placeholder-indent {
+  width: 24px;
+  display: inline-block;
+}
+
+.icon-btn {
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: var(--radius-soft);
+  padding: 2px 8px;
+  cursor: pointer;
+  color: var(--notion-text);
+}
+
+.icon-btn:hover {
+  background: rgba(0, 0, 0, 0.07);
+  transform: scale(1.02);
+}
+
+.icon-btn.danger {
+  color: #8d2a2a;
+  border-color: rgba(141, 42, 42, 0.2);
+  background: rgba(141, 42, 42, 0.06);
+}
+
+.drag-handle {
+  border: 1px dashed rgba(0, 0, 0, 0.18);
+  border-radius: var(--radius-micro);
+  background: transparent;
+  color: var(--notion-text-secondary);
+  cursor: grab;
+  padding: 1px 5px;
+  letter-spacing: 0.125px;
+  font-size: 12px;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 9999px;
+  font-size: 12px;
+  line-height: 1.33;
+  letter-spacing: 0.125px;
+  font-weight: 600;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.status-cell .inline-select {
+  font-weight: 600;
+}
+
+.status-cell.status-not-started .inline-select {
+  background: #f1efed;
+  color: #615d59;
+}
+
+.status-cell.status-in-progress .inline-select {
+  background: var(--notion-blue-badge-bg);
+  color: var(--notion-blue-badge-text);
+}
+
+.status-cell.status-completed .inline-select {
+  background: #eaf8ee;
+  color: #1aae39;
+}
+
+.status-cell.status-delayed .inline-select {
+  background: #fff0e6;
+  color: #dd5b00;
+}
+
+.progress-inline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.progress-inline input[type="range"] {
+  accent-color: #0075de;
+  width: 76px;
+}
+
+.inline-select,
+.inline-date,
+.cell-editor {
+  width: 100%;
+  height: 28px;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  border-radius: 4px;
+  padding: 0 6px;
+  background: #fff;
+  font-size: 12px;
+}
+
+.status-cell {
+  min-width: 130px;
+}
+
+.action-cell {
+  display: flex;
+  gap: 4px;
+}
+
+.empty-cell {
+  text-align: center;
+  color: var(--notion-text-secondary);
+  padding: 28px 0;
+}
+
+.right-panel {
+  overflow: auto;
+}
+
+.gantt-wrapper {
+  height: 100%;
+  min-height: 600px;
+  background: #fff;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.gantt-empty {
+  padding: 20px;
+  color: var(--notion-text-secondary);
+}
+
+.gantt-wrapper svg text {
+  font-family: "NotionInter", Inter, -apple-system, system-ui, "Segoe UI", Helvetica, Arial, sans-serif;
+  fill: rgba(0, 0, 0, 0.92);
+}
+
+.gantt-wrapper svg line {
+  stroke: rgba(0, 0, 0, 0.06);
+}
+
+.gantt-wrapper svg rect {
+  shape-rendering: geometricPrecision;
+}
+
+.gantt-wrapper [role="columnheader"],
+.gantt-wrapper [role="rowheader"] {
+  color: var(--notion-text-secondary);
+}
+
+.gantt-wrapper .grid-header {
+  fill: #f6f5f4;
+}
+
+.gantt-wrapper .today {
+  fill: rgba(0, 117, 222, 0.08) !important;
+}
+
+.gantt-wrapper .bar-label {
+  fill: rgba(0, 0, 0, 0.95);
+  font-weight: 500;
+  font-size: 12px;
+}
+
+.gantt-wrapper .calendar-top {
+  fill: #615d59;
+  font-weight: 600;
+}
+
+.gantt-wrapper .calendar-bottom {
+  fill: #615d59;
+  font-size: 12px;
+}
+
+/* Fourth-pass: hyper-close Notion skin for gantt-task-react internals */
+.notion-gantt-theme {
+  --gantt-line: rgba(0, 0, 0, 0.06);
+  --gantt-header-bg: #f6f5f4;
+  --gantt-header-text: #615d59;
+  --gantt-label: rgba(0, 0, 0, 0.95);
+}
+
+.notion-gantt-theme .gantt-container {
+  border-radius: 0;
+}
+
+.notion-gantt-theme .gantt-task-react {
+  background: #fff;
+}
+
+.notion-gantt-theme :is(.calendar-top-text, .calendar-bottom-text) {
+  fill: var(--gantt-header-text);
+  font-family: "NotionInter", Inter, -apple-system, system-ui, "Segoe UI", Helvetica, Arial, sans-serif;
+}
+
+.notion-gantt-theme .calendar-top-text {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1px;
+}
+
+.notion-gantt-theme .calendar-bottom-text {
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.notion-gantt-theme :is(.calendar-row rect, .calendar-row line, .grid-row line, .grid-header line) {
+  stroke: var(--gantt-line);
+}
+
+.notion-gantt-theme .calendar-row rect {
+  fill: var(--gantt-header-bg);
+}
+
+.notion-gantt-theme .grid-header rect {
+  fill: var(--gantt-header-bg);
+}
+
+.notion-gantt-theme .grid-row:nth-child(even) rect {
+  fill: #ffffff;
+}
+
+.notion-gantt-theme .grid-row:nth-child(odd) rect {
+  fill: #fcfcfb;
+}
+
+.notion-gantt-theme .today {
+  fill: rgba(0, 117, 222, 0.09) !important;
+}
+
+.notion-gantt-theme :is(.bar, .project, .milestone) {
+  filter: saturate(0.98);
+}
+
+.notion-gantt-theme .bar {
+  rx: 4;
+  ry: 4;
+}
+
+.notion-gantt-theme .bar-group {
+  transform: translateY(0.5px);
+}
+
+.notion-gantt-theme .bar-progress {
+  opacity: 0.92;
+}
+
+.notion-gantt-theme .bar-label {
+  fill: var(--gantt-label);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.1px;
+}
+
+.notion-gantt-theme .project {
+  opacity: 0.94;
+}
+
+.notion-gantt-theme .milestone {
+  stroke: rgba(0, 0, 0, 0.16);
+  stroke-width: 0.8;
+}
+
+.notion-gantt-theme :is(.handle, .bar-handle) {
+  fill: #ffffff;
+  stroke: rgba(0, 0, 0, 0.2);
+  stroke-width: 1;
+}
+
+.notion-gantt-theme :is(.arrow, .dependency-arrow) {
+  stroke: rgba(0, 0, 0, 0.22);
+  stroke-width: 1.2;
+  fill: rgba(0, 0, 0, 0.22);
+}
+
+.notion-gantt-theme .bar-wrapper:hover .bar {
+  filter: brightness(0.97);
+}
+
+.notion-gantt-theme .bar-wrapper:hover .bar-progress {
+  filter: brightness(0.95);
+}
+
+.notion-gantt-theme .bar-wrapper:focus-visible .bar {
+  stroke: #097fe8;
+  stroke-width: 1.4;
+}
+
+.notion-gantt-theme .tooltip {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  box-shadow: rgba(0, 0, 0, 0.04) 0px 4px 18px, rgba(0, 0, 0, 0.027) 0px 2px 8px;
+  color: rgba(0, 0, 0, 0.95);
+}
+
+.zoom-control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--notion-text-secondary);
+  font-size: 14px;
+}
+
+.zoom-control input {
+  width: 120px;
+}
+
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.22);
+  display: flex;
+  justify-content: flex-end;
+  z-index: 20;
+}
+
+.drawer {
+  width: 430px;
+  height: 100%;
+  background: var(--notion-bg);
+  border-left: 1px solid var(--notion-border);
+  box-shadow: rgba(0, 0, 0, 0.01) 0px 1px 3px, rgba(0, 0, 0, 0.02) 0px 3px 7px, rgba(0, 0, 0, 0.02) 0px 7px 15px,
+    rgba(0, 0, 0, 0.04) 0px 14px 28px, rgba(0, 0, 0, 0.05) 0px 23px 52px;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.drawer-small {
+  width: 360px;
+}
+
+.drawer h3 {
+  margin: 0 0 12px;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.25px;
+}
+
+.drawer-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.drawer-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--notion-text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.drawer-form input,
+.drawer-form select,
+.drawer-form textarea {
+  border: 1px solid #dddddd;
+  border-radius: var(--radius-micro);
+  padding: 8px;
+  font-size: 14px;
+  color: var(--notion-text);
+  background: #fff;
+}
+
+.drawer-form textarea {
+  resize: vertical;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.checkbox-row {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 8px !important;
+}
+
+.checkbox-row input {
+  width: auto;
+}
+
+.drawer-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.error-text {
+  margin: 0;
+  color: #b83c3c;
+  font-size: 14px;
+}
+
+@media (max-width: 1200px) {
+  .content-wrap {
+    padding: 10px 10px 14px;
+  }
+
+  .main-layout {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .input-search {
+    min-width: 200px;
+  }
+
+  .left-panel {
+    max-height: 48vh;
+  }
+
+  .right-panel {
+    min-height: 55vh;
+  }
+}
+`r`n==================================================`r`nFILE: src\types.ts`r`n==================================================`r`n
+export type Language = "zh" | "en";
+
+export type TaskStatus = "not_started" | "in_progress" | "completed" | "delayed";
+export type TaskPriority = "high" | "medium" | "low";
+export type ViewModeOption = "day" | "week" | "month";
+export type SortBy = "default" | "name" | "startDate" | "endDate" | "progress" | "priority";
+
+export interface ProjectItem {
+  id: string;
+  name: string;
+  description?: string;
+}
+
+export interface TaskItem {
+  id: string;
+  projectId: string;
+  parentId?: string;
+  name: string;
+  startDate: string;
+  endDate: string;
+  duration: number;
+  owner: string;
+  progress: number;
+  priority: TaskPriority;
+  status: TaskStatus;
+  dependencyIds: string[];
+  notes: string;
+  isMilestone: boolean;
+  order: number;
+}
+
+export interface PersistedState {
+  projects: ProjectItem[];
+  tasks: TaskItem[];
+  activeProjectId: string;
+}
+
+export interface TaskFilters {
+  owner: string;
+  status: TaskStatus | "all";
+  priority: TaskPriority | "all";
+}
+
+export interface VisibleTask {
+  task: TaskItem;
+  depth: number;
+  hasChildren: boolean;
+}
+`r`n==================================================`r`nFILE: src\utils\date.ts`r`n==================================================`r`n
+import { addDays, differenceInCalendarDays, format, isValid, parseISO, startOfDay } from "date-fns";
+
+export const toDate = (value: string): Date => {
+  const parsed = parseISO(value);
+  return isValid(parsed) ? startOfDay(parsed) : startOfDay(new Date());
+};
+
+export const toISODate = (value: Date): string => format(startOfDay(value), "yyyy-MM-dd");
+
+export const calcDuration = (startDate: string, endDate: string): number => {
+  const start = toDate(startDate);
+  const end = toDate(endDate);
+  return Math.max(1, differenceInCalendarDays(end, start) + 1);
+};
+
+export const normalizeDates = (startDate: string, endDate: string): { startDate: string; endDate: string } => {
+  const start = toDate(startDate);
+  const end = toDate(endDate);
+  if (end < start) {
+    return { startDate: toISODate(start), endDate: toISODate(start) };
+  }
+  return { startDate: toISODate(start), endDate: toISODate(end) };
+};
+
+export const endDateFromDuration = (startDate: string, duration: number): string => {
+  const start = toDate(startDate);
+  const safeDuration = Math.max(1, duration);
+  return toISODate(addDays(start, safeDuration - 1));
+};
+`r`n==================================================`r`nFILE: src\utils\taskUtils.ts`r`n==================================================`r`n
+import { arrayMove } from "@dnd-kit/sortable";
+import { SortBy, TaskFilters, TaskItem, VisibleTask } from "../types";
+import { calcDuration, toDate } from "./date";
+
+const priorityWeight: Record<string, number> = { high: 1, medium: 2, low: 3 };
+
+const sortSiblings = (tasks: TaskItem[], sortBy: SortBy): TaskItem[] => {
+  const copy = [...tasks];
+  if (sortBy === "default") {
+    return copy.sort((a, b) => a.order - b.order);
+  }
+  return copy.sort((a, b) => {
+    switch (sortBy) {
+      case "name":
+        return a.name.localeCompare(b.name, "zh-CN");
+      case "startDate":
+        return toDate(a.startDate).getTime() - toDate(b.startDate).getTime();
+      case "endDate":
+        return toDate(a.endDate).getTime() - toDate(b.endDate).getTime();
+      case "progress":
+        return b.progress - a.progress;
+      case "priority":
+        return (priorityWeight[a.priority] ?? 9) - (priorityWeight[b.priority] ?? 9);
+      default:
+        return a.order - b.order;
+    }
+  });
+};
+
+const taskMatches = (task: TaskItem, search: string, filters: TaskFilters): boolean => {
+  const matchedSearch =
+    search.trim().length === 0 ||
+    [task.name, task.owner, task.notes].join(" ").toLowerCase().includes(search.toLowerCase());
+  const matchedOwner = filters.owner === "all" || task.owner === filters.owner;
+  const matchedStatus = filters.status === "all" || task.status === filters.status;
+  const matchedPriority = filters.priority === "all" || task.priority === filters.priority;
+  return matchedSearch && matchedOwner && matchedStatus && matchedPriority;
+};
+
+export const getChildrenMap = (tasks: TaskItem[], projectId: string): Map<string | undefined, TaskItem[]> => {
+  const map = new Map<string | undefined, TaskItem[]>();
+  tasks
+    .filter((task) => task.projectId === projectId)
+    .forEach((task) => {
+      const key = task.parentId;
+      const existing = map.get(key) ?? [];
+      existing.push(task);
+      map.set(key, existing);
+    });
+  return map;
+};
+
+export const getDescendantIds = (tasks: TaskItem[], parentId: string): string[] => {
+  const children = tasks.filter((task) => task.parentId === parentId);
+  return children.flatMap((child) => [child.id, ...getDescendantIds(tasks, child.id)]);
+};
+
+export const getVisibleTasks = (
+  tasks: TaskItem[],
+  projectId: string,
+  collapsedIds: Set<string>,
+  search: string,
+  filters: TaskFilters,
+  sortBy: SortBy
+): VisibleTask[] => {
+  const map = getChildrenMap(tasks, projectId);
+
+  const traverse = (task: TaskItem, depth: number): { matched: boolean; rows: VisibleTask[] } => {
+    const children = sortSiblings(map.get(task.id) ?? [], sortBy);
+    const childRows: VisibleTask[] = [];
+    let childMatched = false;
+
+    for (const child of children) {
+      const childResult = traverse(child, depth + 1);
+      if (childResult.matched) {
+        childMatched = true;
+        childRows.push(...childResult.rows);
+      }
+    }
+
+    const selfMatched = taskMatches(task, search, filters);
+    const matched = selfMatched || childMatched;
+    if (!matched) {
+      return { matched: false, rows: [] };
+    }
+
+    const current: VisibleTask = {
+      task,
+      depth,
+      hasChildren: children.length > 0
+    };
+
+    const rows = collapsedIds.has(task.id) ? [current] : [current, ...childRows];
+    return { matched: true, rows };
+  };
+
+  const roots = sortSiblings(map.get(undefined) ?? [], sortBy);
+  return roots.flatMap((root) => {
+    const result = traverse(root, 0);
+    return result.matched ? result.rows : [];
+  });
+};
+
+export const reorderTasks = (tasks: TaskItem[], projectId: string, activeId: string, overId: string): TaskItem[] => {
+  const projectTasks = tasks.filter((task) => task.projectId === projectId);
+  const otherTasks = tasks.filter((task) => task.projectId !== projectId);
+  const sortedProjectTasks = [...projectTasks].sort((a, b) => a.order - b.order);
+  const oldIndex = sortedProjectTasks.findIndex((task) => task.id === activeId);
+  const newIndex = sortedProjectTasks.findIndex((task) => task.id === overId);
+  if (oldIndex === -1 || newIndex === -1) {
+    return tasks;
+  }
+  const moved = arrayMove(sortedProjectTasks, oldIndex, newIndex).map((task, index) => ({
+    ...task,
+    order: (index + 1) * 10
+  }));
+  return [...otherTasks, ...moved];
+};
+
+export const sanitizeTask = (task: TaskItem): TaskItem => {
+  const duration = task.isMilestone ? 1 : calcDuration(task.startDate, task.endDate);
+  const normalizedProgress = Math.min(100, Math.max(0, Math.round(task.progress)));
+  return {
+    ...task,
+    endDate: task.isMilestone ? task.startDate : task.endDate,
+    duration,
+    progress: normalizedProgress
+  };
+};
+
+export const uniqueValues = (tasks: TaskItem[], key: "owner"): string[] =>
+  [...new Set(tasks.map((task) => task[key]).filter(Boolean))].sort((a, b) => a.localeCompare(b, "zh-CN"));

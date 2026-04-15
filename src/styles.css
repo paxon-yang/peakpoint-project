@@ -39,6 +39,8 @@ button {
 
 .app-shell {
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .app-header {
@@ -47,7 +49,8 @@ button {
 }
 
 .header-inner {
-  max-width: 1400px;
+  max-width: none;
+  width: 100%;
   margin: 0 auto;
   min-height: 76px;
   padding: 14px 20px 13px;
@@ -77,10 +80,50 @@ button {
   gap: 8px;
 }
 
+.language-toggle {
+  display: inline-flex;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.lang-btn {
+  border: none;
+  background: transparent;
+  color: #615d59;
+  height: 30px;
+  min-width: 38px;
+  padding: 0 10px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.lang-btn.active {
+  background: #0075de;
+  color: #fff;
+}
+
 .content-wrap {
-  max-width: 1400px;
+  max-width: none;
+  width: 100%;
   margin: 0 auto;
-  padding: 14px 20px 22px;
+  padding: 10px 12px 14px;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.header-inner-full {
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+.content-wrap-full {
+  padding-left: 12px;
+  padding-right: 12px;
 }
 
 .toolbar {
@@ -177,7 +220,18 @@ button {
   display: grid;
   grid-template-columns: minmax(0, 48%) minmax(0, 52%);
   gap: 12px;
-  min-height: calc(100vh - 190px);
+  min-height: 0;
+  height: 100%;
+  flex: 1;
+}
+
+.main-layout-dense {
+  gap: 8px;
+  min-height: 0;
+}
+
+.main-layout-single {
+  grid-template-columns: 1fr;
 }
 
 .panel-card {
@@ -187,6 +241,7 @@ button {
   box-shadow: var(--notion-shadow);
   overflow: hidden;
   min-height: 0;
+  height: 100%;
 }
 
 .panel-card:hover {
@@ -210,10 +265,81 @@ button {
 .task-table td {
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
   padding: 7px 7px;
+  height: 36px;
   white-space: nowrap;
   text-align: left;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.excel-like-table tbody td {
+  border-right: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.excel-like-table tbody td:last-child,
+.excel-like-table thead th:last-child {
+  border-right: none;
+}
+
+.grouped-table {
+  border-left: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.grouped-table .category-row td {
+  background: #f6f5f4;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  height: 36px;
+  padding: 0 8px;
+}
+
+.category-row-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.category-title-input {
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: #31302e;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.1px;
+  min-width: 160px;
+  max-width: 340px;
+  height: 24px;
+  padding: 0 6px;
+}
+
+.category-title-input:hover {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.category-title-input:focus-visible {
+  outline: 2px solid #097fe8;
+  outline-offset: 0;
+  border-color: rgba(9, 127, 232, 0.35);
+  background: #fff;
+}
+
+.category-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 18px;
+  border-radius: 9999px;
+  background: rgba(0, 0, 0, 0.08);
+  color: #615d59;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.grouped-table .task-name-cell .inline-text {
+  min-width: 0;
 }
 
 .task-table thead th {
@@ -239,6 +365,39 @@ button {
 .task-name-cell {
   display: flex;
   align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+.row-drag-handle {
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 4px;
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #615d59;
+  font-size: 11px;
+  line-height: 1;
+  cursor: grab;
+  user-select: none;
+  margin-right: 4px;
+  flex: 0 0 auto;
+}
+
+.row-drag-handle:active {
+  cursor: grabbing;
+}
+
+.row-drag-handle:hover {
+  background: rgba(0, 0, 0, 0.07);
+}
+
+.category-cell {
+  display: flex;
+  align-items: center;
   gap: 4px;
   min-width: 0;
 }
@@ -248,9 +407,72 @@ button {
   text-overflow: ellipsis;
 }
 
+.row-leading-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.category-header-tools {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.category-toggle {
+  padding: 0 6px;
+  min-width: 22px;
+  height: 22px;
+}
+
+.cell-mini-btn {
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 4px;
+  width: 20px;
+  height: 20px;
+  background: rgba(0, 0, 0, 0.03);
+  color: #4f4b47;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.cell-mini-btn:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.cell-delete-btn {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  width: 20px;
+  height: 20px;
+  background: rgba(0, 0, 0, 0.04);
+  color: #8d2a2a;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.cell-delete-btn:hover {
+  background: rgba(141, 42, 42, 0.1);
+}
+
+.row-delete-cell {
+  text-align: center;
+}
+
+.row-delete-cell .cell-delete-btn {
+  margin: 0 auto;
+}
+
 .placeholder-indent {
-  width: 24px;
+  width: 12px;
   display: inline-block;
+}
+
+.task-table thead th:nth-child(2),
+.task-table tbody td:nth-child(2) {
+  padding-left: 3px;
 }
 
 .icon-btn {
@@ -296,22 +518,26 @@ button {
   border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
-.status-not-started {
+.status-cell .inline-select {
+  font-weight: 600;
+}
+
+.status-cell.status-not-started .inline-select {
   background: #f1efed;
   color: #615d59;
 }
 
-.status-in-progress {
+.status-cell.status-in-progress .inline-select {
   background: var(--notion-blue-badge-bg);
   color: var(--notion-blue-badge-text);
 }
 
-.status-completed {
+.status-cell.status-completed .inline-select {
   background: #eaf8ee;
   color: #1aae39;
 }
 
-.status-delayed {
+.status-cell.status-delayed .inline-select {
   background: #fff0e6;
   color: #dd5b00;
 }
@@ -328,6 +554,45 @@ button {
   width: 76px;
 }
 
+.inline-select,
+.inline-date,
+.cell-editor {
+  width: 100%;
+  height: 26px;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  border-radius: 4px;
+  padding: 0 6px;
+  background: #fff;
+  font-size: 12px;
+}
+
+.inline-text {
+  width: 100%;
+  height: 26px;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  border-radius: 4px;
+  padding: 0 6px;
+  background: #fff;
+  font-size: 12px;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+
+.inline-text:focus-visible,
+.inline-date:focus-visible,
+.inline-select:focus-visible {
+  outline: none;
+  border-color: #2a7de1;
+  box-shadow: 0 0 0 2px rgba(42, 125, 225, 0.16);
+}
+
+.category-input {
+  min-width: 90px;
+}
+
+.status-cell {
+  min-width: 130px;
+}
+
 .action-cell {
   display: flex;
   gap: 4px;
@@ -341,13 +606,220 @@ button {
 
 .right-panel {
   overflow: auto;
+  min-height: 0;
+}
+
+.main-layout-single .right-panel {
+  overflow: hidden;
 }
 
 .gantt-wrapper {
   height: 100%;
-  min-height: 600px;
+  min-height: 0;
   background: #fff;
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.gantt-unified-wrapper {
+  overflow: hidden;
+  position: relative;
+}
+
+/* 鍙充晶琛ㄥご涓よ鍒嗛殧绾匡細鍦?y=72px 澶勶紙琛?骞存湀 / 琛?鏃ユ湡鐨勮竟鐣岋級鐢绘í绾?*/
+.gantt-unified-wrapper::before {
+  content: none;
+}
+
+/* 宸︿晶琛ㄥご锛氳1锛堝垪鏍囬锛? 琛?锛堜笌鍙充晶鏃ユ湡琛屽榻愮殑绌虹櫧鍒嗛殧琛岋級 */
+.gantt-left-header {
+  background: var(--notion-bg-warm);
+  overflow-x: auto;
+  overflow-y: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.gantt-left-header::-webkit-scrollbar {
+  height: 0;
+}
+
+.gantt-left-header {
+  scrollbar-width: none;
+}
+
+/* 宸︿晶琛?锛氫笌鍙充晶鏃ユ湡琛屽榻愮殑绌虹櫧鐏拌壊鍗犱綅琛?*/
+.gantt-left-header-ext {
+  background: var(--notion-bg-warm);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  flex-shrink: 0;
+}
+
+.gantt-left-table {
+  overflow-x: auto;
+  overflow-y: visible;
+  scrollbar-width: none;
+}
+
+.gantt-left-table::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.gantt-left-table::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+.gantt-left-table::-webkit-scrollbar-thumb {
+  background: transparent;
+}
+
+.gantt-left-table::-webkit-scrollbar-thumb:hover {
+  background: transparent;
+}
+
+/* Sync right built-in horizontal scrollbar geometry with the left one */
+.notion-gantt-theme ._2k9Ys {
+  height: var(--sync-scrollbar-size, 14px) !important;
+  margin-top: 0 !important;
+  transform: none !important;
+  position: relative;
+  z-index: 5;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-color: #8c8c8c transparent;
+}
+
+.notion-gantt-theme ._2k9Ys::-webkit-scrollbar {
+  width: var(--sync-scrollbar-size, 14px) !important;
+  height: var(--sync-scrollbar-size, 14px) !important;
+}
+
+.notion-gantt-theme ._2k9Ys::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+.notion-gantt-theme ._2k9Ys::-webkit-scrollbar-thumb {
+  background: #8c8c8c;
+  border-radius: 999px;
+  border: 0;
+}
+
+.notion-gantt-theme ._2k9Ys::-webkit-scrollbar-thumb:hover {
+  background: #787878;
+}
+
+.left-proxy-scrollbar {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: var(--sync-scrollbar-size, 14px);
+  overflow-x: auto;
+  overflow-y: hidden;
+  z-index: 6;
+  scrollbar-width: thin;
+  scrollbar-color: #8c8c8c transparent;
+}
+
+.left-proxy-scrollbar::-webkit-scrollbar {
+  width: var(--sync-scrollbar-size, 14px);
+  height: var(--sync-scrollbar-size, 14px);
+}
+
+.left-proxy-scrollbar::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+.left-proxy-scrollbar::-webkit-scrollbar-thumb {
+  background: #8c8c8c;
+  border-radius: 999px;
+  border: 0;
+}
+
+.left-proxy-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #787878;
+}
+
+.gantt-split-divider {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #000;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.gantt-left-grid {
+  display: grid;
+  align-items: center;
+  height: 100%;
+  width: max-content;
+  min-width: var(--left-grid-min-width, 1008px);
+}
+
+.gantt-left-cell {
+  padding: 0 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border-right: 1px solid rgba(0, 0, 0, 0.05);
+  min-height: 0;
+}
+
+.gantt-left-grid .gantt-left-cell:last-child {
+  border-right: none;
+}
+
+.gantt-left-grid-header .gantt-left-cell {
+  color: var(--notion-text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.125px;
+  line-height: 1.2;
+}
+
+.task-name-header-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.category-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.gantt-left-row {
+  background: #fff;
+  box-sizing: border-box;
+  box-shadow: inset 0 -1px rgba(0, 0, 0, 0.06);
+  width: max-content;
+  min-width: var(--left-grid-min-width, 1008px);
+}
+
+.gantt-left-row:hover {
+  background: #fafaf9;
+}
+
+.gantt-left-category-row {
+  background: #f6f5f4;
+  box-shadow: inset 0 1px rgba(0, 0, 0, 0.08), inset 0 -1px rgba(0, 0, 0, 0.08);
+}
+
+.task-name-gantt-cell {
+  padding-left: 0;
+}
+
+.gantt-left-row,
+.gantt-left-row .inline-text,
+.gantt-left-row .inline-select,
+.gantt-left-row .inline-date {
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.gantt-left-row .task-name-cell {
+  gap: 0;
 }
 
 .gantt-empty {
@@ -378,7 +850,7 @@ button {
 }
 
 .gantt-wrapper .today {
-  fill: rgba(0, 117, 222, 0.08) !important;
+  fill: transparent !important;
 }
 
 .gantt-wrapper .bar-label {
@@ -403,6 +875,7 @@ button {
   --gantt-header-bg: #f6f5f4;
   --gantt-header-text: #615d59;
   --gantt-label: rgba(0, 0, 0, 0.95);
+  --sync-scrollbar-size: 14px;
 }
 
 .notion-gantt-theme .gantt-container {
@@ -419,14 +892,23 @@ button {
 }
 
 .notion-gantt-theme .calendar-top-text {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.1px;
+  transform: translateY(-8px);
 }
 
 .notion-gantt-theme .calendar-bottom-text {
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 600;
+  transform: translateY(2px);
+}
+
+/* Force right timeline header to same gray tone as left header */
+.notion-gantt-theme ._35nLX {
+  fill: var(--notion-bg-warm);
+  stroke: rgba(0, 0, 0, 0.1);
+  stroke-width: 1;
 }
 
 .notion-gantt-theme :is(.calendar-row rect, .calendar-row line, .grid-row line, .grid-header line) {
@@ -441,16 +923,16 @@ button {
   fill: var(--gantt-header-bg);
 }
 
-.notion-gantt-theme .grid-row:nth-child(even) rect {
+.notion-gantt-theme .grid-row rect {
   fill: #ffffff;
 }
 
-.notion-gantt-theme .grid-row:nth-child(odd) rect {
-  fill: #fcfcfb;
+.notion-gantt-theme .grid-row:first-child rect {
+  fill: #f6f5f4;
 }
 
 .notion-gantt-theme .today {
-  fill: rgba(0, 117, 222, 0.09) !important;
+  fill: transparent !important;
 }
 
 .notion-gantt-theme :is(.bar, .project, .milestone) {
