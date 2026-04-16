@@ -1,5 +1,6 @@
 ﻿import { useEffect, useMemo, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
+import { useRef } from "react";
 import { AuthDialog } from "./components/AuthDialog";
 import { GanttBoard } from "./components/GanttBoard";
 import { ProjectDialog } from "./components/ProjectDialog";
@@ -17,7 +18,17 @@ import {
   signOutRemote,
   signUpWithPassword
 } from "./lib/remoteStore";
-import { Language, PersistedState, SortBy, TaskFilters, TaskItem, ViewModeOption } from "./types";
+import {
+  Language,
+  PersistedState,
+  ProjectPermissionItem,
+  ProjectRole,
+  SortBy,
+  TaskAuditLogItem,
+  TaskFilters,
+  TaskItem,
+  ViewModeOption
+} from "./types";
 import { calcDuration, normalizeDates } from "./utils/date";
 import { getDescendantIds, getVisibleTasks, reorderTasks, sanitizeTask } from "./utils/taskUtils";
 
@@ -27,6 +38,7 @@ const LANGUAGE_KEY = "ccsa-project-management-language";
 const LEGACY_PROJECT_NAME = "CCSA主项目 / CCSA Main Project";
 const TARGET_PROJECT_NAME = "TMM project";
 const DEFAULT_TIMELINE_START = "2026-04-01";
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const normalizeStatus = (value: unknown): TaskItem["status"] => {
   if (value === "not_started" || value === "\u672a\u5f00\u59cb") return "not_started";
@@ -57,6 +69,60 @@ const normalizeTimelineStartDate = (value: unknown): string => {
   return Number.isNaN(timestamp) ? DEFAULT_TIMELINE_START : trimmed;
 };
 
+const normalizeRole = (value: unknown): ProjectRole => {
+  if (value === "admin" || value === "editor" || value === "viewer") return value;
+  if (value === "read_only" || value === "readonly") return "viewer";
+  return "viewer";
+};
+
+const normalizeEmail = (value: unknown): string => (typeof value === "string" ? value.trim().toLowerCase() : "");
+
+const normalizePermissions = (value: unknown): ProjectPermissionItem[] => {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => {
+      const record = item as Partial<ProjectPermissionItem>;
+      const projectId = typeof record.projectId === "string" ? record.projectId : "";
+      const email = normalizeEmail(record.email);
+      if (!projectId || !email) return undefined;
+      const normalized: ProjectPermissionItem = {
+        projectId,
+        email,
+        role: normalizeRole(record.role),
+        updatedAt: typeof record.updatedAt === "string" ? record.updatedAt : new Date().toISOString()
+      };
+      if (typeof record.updatedBy === "string") {
+        normalized.updatedBy = record.updatedBy;
+      }
+      return normalized;
+    })
+    .filter((item): item is ProjectPermissionItem => Boolean(item));
+};
+
+const normalizeAuditLogs = (value: unknown): TaskAuditLogItem[] => {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => {
+      const record = item as Partial<TaskAuditLogItem>;
+      if (
+        typeof record.id !== "string" ||
+        typeof record.projectId !== "string" ||
+        typeof record.taskId !== "string" ||
+        typeof record.taskName !== "string" ||
+        typeof record.field !== "string" ||
+        typeof record.before !== "string" ||
+        typeof record.after !== "string" ||
+        typeof record.changedBy !== "string" ||
+        typeof record.changedAt !== "string"
+      ) {
+        return undefined;
+      }
+      if (!["name", "startDate", "endDate", "status"].includes(record.field)) return undefined;
+      return record as TaskAuditLogItem;
+    })
+    .filter((item): item is TaskAuditLogItem => Boolean(item));
+};
+
 const normalizePersistedState = (parsed: PersistedState): PersistedState => ({
   ...parsed,
   projects: parsed.projects.map((project) => {
@@ -74,7 +140,9 @@ const normalizePersistedState = (parsed: PersistedState): PersistedState => ({
     category: normalizeCategory(task),
     dependencyIds: Array.isArray(task.dependencyIds) ? task.dependencyIds : [],
     isCategoryPlaceholder: Boolean(task.isCategoryPlaceholder)
-  }))
+  })),
+  projectPermissions: normalizePermissions(parsed.projectPermissions),
+  auditLogs: normalizeAuditLogs(parsed.auditLogs)
 });
 
 const loadState = (): PersistedState => {
@@ -110,6 +178,8 @@ export const App = () => {
   const initial = loadState();
   const [projects, setProjects] = useState(initial.projects);
   const [tasks, setTasks] = useState<TaskItem[]>(initial.tasks.map(sanitizeTask));
+  const [projectPermissions, setProjectPermissions] = useState<ProjectPermissionItem[]>(normalizePermissions(initial.projectPermissions));
+  const [auditLogs, setAuditLogs] = useState<TaskAuditLogItem[]>(normalizeAuditLogs(initial.auditLogs));
   const [activeProjectId, setActiveProjectId] = useState(initial.activeProjectId || initial.projects[0]?.id || "");
   const [language, setLanguage] = useState<Language>(loadLanguage());
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -127,6 +197,12 @@ export const App = () => {
   const [isProjectDialogOpen, setProjectDialogOpen] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState<string>();
   const [collapsedTaskIds, setCollapsedTaskIds] = useState<Set<string>>(new Set());
+  const [isPermissionPanelOpen, setPermissionPanelOpen] = useState(false);
+  const [permissionEmail, setPermissionEmail] = useState("");
+  const [permissionRole, setPermissionRole] = useState<ProjectRole>("viewer");
+  const permissionPanelRef = useRef<HTMLDivElement>(null);
+  const [isAuditPanelOpen, setAuditPanelOpen] = useState(false);
+  const auditPanelRef = useRef<HTMLDivElement>(null);
 
   const viewMode: ViewModeOption = "day";
   const sortBy: SortBy = "default";
@@ -139,12 +215,34 @@ export const App = () => {
   };
 
   const t = createTranslator(language);
-  const canEdit = !isRemoteStoreEnabled || Boolean(currentUser);
   const activeProject = useMemo(
     () => projects.find((project) => project.id === activeProjectId),
     [projects, activeProjectId]
   );
   const activeTimelineStartDate = activeProject?.timelineStartDate ?? DEFAULT_TIMELINE_START;
+  const normalizedUserEmail = normalizeEmail(currentUser?.email);
+  const activeProjectPermissions = useMemo(
+    () => projectPermissions.filter((item) => item.projectId === activeProjectId),
+    [projectPermissions, activeProjectId]
+  );
+  const currentProjectRole = useMemo<ProjectRole>(() => {
+    if (!isRemoteStoreEnabled) return "admin";
+    if (!normalizedUserEmail) return "viewer";
+    const matched = activeProjectPermissions.find((item) => item.email === normalizedUserEmail);
+    if (matched) return matched.role;
+    return activeProjectPermissions.length === 0 ? "admin" : "viewer";
+  }, [activeProjectPermissions, normalizedUserEmail]);
+  const canManagePermissions = currentProjectRole === "admin";
+  const canEdit = !isRemoteStoreEnabled || currentProjectRole === "admin" || currentProjectRole === "editor";
+  const activeProjectAuditLogs = useMemo(
+    () =>
+      auditLogs
+        .filter((item) => item.projectId === activeProjectId)
+        .slice()
+        .sort((a, b) => b.changedAt.localeCompare(a.changedAt))
+        .slice(0, 120),
+    [auditLogs, activeProjectId]
+  );
 
   const visibleTasks = useMemo(
     () => getVisibleTasks(tasks, activeProjectId, collapsedTaskIds, searchText, filters, sortBy),
@@ -187,6 +285,8 @@ export const App = () => {
         const normalized = normalizePersistedState(remote);
         setProjects(normalized.projects);
         setTasks(normalized.tasks.map(sanitizeTask));
+        setProjectPermissions(normalizePermissions(normalized.projectPermissions));
+        setAuditLogs(normalizeAuditLogs(normalized.auditLogs));
         setActiveProjectId(normalized.activeProjectId || normalized.projects[0]?.id || "");
         setHasUnsavedChanges(false);
       } catch (error) {
@@ -210,9 +310,63 @@ export const App = () => {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [hasUnsavedChanges]);
 
-  const syncState = (nextProjects: PersistedState["projects"], nextTasks: PersistedState["tasks"], nextActiveProjectId: string) => {
+  useEffect(() => {
+    if (!isPermissionPanelOpen) return;
+    const onWindowMouseDown = (event: MouseEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (permissionPanelRef.current?.contains(target)) return;
+      setPermissionPanelOpen(false);
+    };
+    window.addEventListener("mousedown", onWindowMouseDown);
+    return () => window.removeEventListener("mousedown", onWindowMouseDown);
+  }, [isPermissionPanelOpen]);
+
+  useEffect(() => {
+    if (!isAuditPanelOpen) return;
+    const onWindowMouseDown = (event: MouseEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (auditPanelRef.current?.contains(target)) return;
+      setAuditPanelOpen(false);
+    };
+    window.addEventListener("mousedown", onWindowMouseDown);
+    return () => window.removeEventListener("mousedown", onWindowMouseDown);
+  }, [isAuditPanelOpen]);
+
+  useEffect(() => {
+    setPermissionPanelOpen(false);
+    setAuditPanelOpen(false);
+  }, [activeProjectId, normalizedUserEmail]);
+
+  useEffect(() => {
+    if (!isRemoteStoreEnabled) return;
+    if (!activeProjectId || !normalizedUserEmail) return;
+    const hasProjectPermission = projectPermissions.some((item) => item.projectId === activeProjectId);
+    if (hasProjectPermission) return;
+
+    setProjectPermissions((prev) => [
+      ...prev,
+      {
+        projectId: activeProjectId,
+        email: normalizedUserEmail,
+        role: "admin",
+        updatedAt: new Date().toISOString(),
+        updatedBy: normalizedUserEmail
+      }
+    ]);
+    setHasUnsavedChanges(true);
+  }, [activeProjectId, normalizedUserEmail, projectPermissions]);
+
+  const syncState = (
+    nextProjects: PersistedState["projects"],
+    nextTasks: PersistedState["tasks"],
+    nextActiveProjectId: string,
+    nextPermissions: ProjectPermissionItem[] = projectPermissions,
+    nextAuditLogs: TaskAuditLogItem[] = auditLogs
+  ) => {
     setProjects(nextProjects);
     setTasks(nextTasks);
+    setProjectPermissions(nextPermissions);
+    setAuditLogs(nextAuditLogs);
     setActiveProjectId(nextActiveProjectId);
     setHasUnsavedChanges(true);
   };
@@ -226,8 +380,102 @@ export const App = () => {
 
   const requireEditPermission = (): boolean => {
     if (canEdit) return true;
-    openAuthDialog("login");
+    if (!currentUser) {
+      openAuthDialog("login");
+    } else {
+      window.alert(language === "zh" ? "当前账号为只读权限，无法修改。" : "This account is read-only for the project.");
+    }
     return false;
+  };
+
+  const getRoleLabel = (role: ProjectRole): string => {
+    if (role === "admin") return t("roleAdmin");
+    if (role === "editor") return t("roleEditor");
+    return t("roleViewer");
+  };
+
+  const getAuditFieldLabel = (field: TaskAuditLogItem["field"]): string => {
+    if (field === "name") return t("taskName");
+    if (field === "startDate") return t("start");
+    if (field === "endDate") return t("end");
+    return t("status");
+  };
+
+  const handleUpsertPermission = () => {
+    if (!canManagePermissions) return;
+    if (!activeProjectId) return;
+    const email = normalizeEmail(permissionEmail);
+    if (!EMAIL_PATTERN.test(email)) {
+      window.alert(language === "zh" ? "请输入有效邮箱" : "Please enter a valid email.");
+      return;
+    }
+    const now = new Date().toISOString();
+    const nextPermissions = [
+      ...projectPermissions.filter((item) => !(item.projectId === activeProjectId && item.email === email)),
+      {
+        projectId: activeProjectId,
+        email,
+        role: permissionRole,
+        updatedAt: now,
+        updatedBy: normalizedUserEmail || email
+      }
+    ];
+    syncState(projects, tasks, activeProjectId, nextPermissions);
+    setPermissionEmail("");
+  };
+
+  const handleRoleChange = (email: string, role: ProjectRole) => {
+    if (!canManagePermissions) return;
+    const now = new Date().toISOString();
+    const nextPermissions = projectPermissions.map((item) =>
+      item.projectId === activeProjectId && item.email === email
+        ? { ...item, role, updatedAt: now, updatedBy: normalizedUserEmail || item.updatedBy }
+        : item
+    );
+    syncState(projects, tasks, activeProjectId, nextPermissions);
+  };
+
+  const handleRemovePermission = (email: string) => {
+    if (!canManagePermissions) return;
+    const projectMembers = projectPermissions.filter((item) => item.projectId === activeProjectId);
+    const target = projectMembers.find((item) => item.email === email);
+    if (!target) return;
+    const adminCount = projectMembers.filter((item) => item.role === "admin").length;
+    if (target.role === "admin" && adminCount <= 1) {
+      window.alert(language === "zh" ? "至少保留一名管理员" : "At least one admin must remain.");
+      return;
+    }
+    const nextPermissions = projectPermissions.filter((item) => !(item.projectId === activeProjectId && item.email === email));
+    syncState(projects, tasks, activeProjectId, nextPermissions);
+  };
+
+  const appendTaskAuditEntries = (
+    baseLogs: TaskAuditLogItem[],
+    before: TaskItem,
+    after: TaskItem,
+    changedBy: string
+  ): TaskAuditLogItem[] => {
+    const now = new Date().toISOString();
+    const changes: Array<{ field: "name" | "startDate" | "endDate" | "status"; before: string; after: string }> = [];
+
+    if (before.name !== after.name) changes.push({ field: "name", before: before.name, after: after.name });
+    if (before.startDate !== after.startDate) changes.push({ field: "startDate", before: before.startDate, after: after.startDate });
+    if (before.endDate !== after.endDate) changes.push({ field: "endDate", before: before.endDate, after: after.endDate });
+    if (before.status !== after.status) changes.push({ field: "status", before: before.status, after: after.status });
+
+    if (changes.length === 0) return baseLogs;
+    const created = changes.map((change) => ({
+      id: `audit-${uuidv4()}`,
+      projectId: after.projectId,
+      taskId: after.id,
+      taskName: after.name,
+      field: change.field,
+      before: change.before,
+      after: change.after,
+      changedBy,
+      changedAt: now
+    }));
+    return [...baseLogs, ...created].slice(-5000);
   };
 
   const handleAuthSubmit = async () => {
@@ -281,7 +529,9 @@ export const App = () => {
     const snapshot: PersistedState = {
       projects,
       tasks,
-      activeProjectId
+      activeProjectId,
+      projectPermissions,
+      auditLogs
     };
     setIsSaving(true);
     let remoteSaved = true;
@@ -352,17 +602,20 @@ export const App = () => {
   const handleTaskDateChange = (taskId: string, startDate: string, endDate: string) => {
     if (!requireEditPermission()) return;
     const normalized = normalizeDates(startDate, endDate);
-    const nextTasks = tasks.map((task) =>
-      task.id === taskId
-        ? {
-            ...task,
-            startDate: normalized.startDate,
-            endDate: task.isMilestone ? normalized.startDate : normalized.endDate,
-            duration: task.isMilestone ? 1 : calcDuration(normalized.startDate, normalized.endDate)
-          }
-        : task
-    );
-    syncState(projects, nextTasks, activeProjectId);
+    const actor = normalizedUserEmail || currentUser?.id || "system";
+    let nextAuditLogs = auditLogs;
+    const nextTasks = tasks.map((task) => {
+      if (task.id !== taskId) return task;
+      const updated = sanitizeTask({
+        ...task,
+        startDate: normalized.startDate,
+        endDate: task.isMilestone ? normalized.startDate : normalized.endDate,
+        duration: task.isMilestone ? 1 : calcDuration(normalized.startDate, normalized.endDate)
+      });
+      nextAuditLogs = appendTaskAuditEntries(nextAuditLogs, task, updated, actor);
+      return updated;
+    });
+    syncState(projects, nextTasks, activeProjectId, projectPermissions, nextAuditLogs);
   };
 
   const handleTaskProgressChange = (taskId: string, progress: number) => {
@@ -374,6 +627,8 @@ export const App = () => {
 
   const handleTaskQuickUpdate = (taskId: string, patch: Partial<TaskItem>) => {
     if (!requireEditPermission()) return;
+    const actor = normalizedUserEmail || currentUser?.id || "system";
+    let nextAuditLogs = auditLogs;
     const nextTasks = tasks.map((task) => {
       if (task.id !== taskId) return task;
       const nextTask = { ...task, ...patch };
@@ -387,9 +642,11 @@ export const App = () => {
         nextTask.progress = Math.max(0, Math.min(100, Math.round(patch.progress)));
       }
       nextTask.duration = nextTask.isMilestone ? 1 : calcDuration(nextTask.startDate, nextTask.endDate);
-      return sanitizeTask(nextTask);
+      const updated = sanitizeTask(nextTask);
+      nextAuditLogs = appendTaskAuditEntries(nextAuditLogs, task, updated, actor);
+      return updated;
     });
-    syncState(projects, nextTasks, activeProjectId);
+    syncState(projects, nextTasks, activeProjectId, projectPermissions, nextAuditLogs);
   };
 
   const handleToggleCollapse = (taskId: string) => {
@@ -580,6 +837,11 @@ export const App = () => {
                 {t("authSignedInAs")}: {currentUser.email || currentUser.id.slice(0, 8)}
               </span>
             ) : null}
+            {isRemoteStoreEnabled ? (
+              <span className={`role-chip role-${currentProjectRole}`} title={t("projectRole")}>
+                {t("projectRole")}: {getRoleLabel(currentProjectRole)}
+              </span>
+            ) : null}
             {isRemoteStoreEnabled && !currentUser ? (
               <>
                 <button className="btn btn-secondary" onClick={() => openAuthDialog("login")}>
@@ -594,6 +856,99 @@ export const App = () => {
               <button className="btn btn-secondary" onClick={() => void handleSignOut()}>
                 {t("logout")}
               </button>
+            ) : null}
+            {isRemoteStoreEnabled && currentUser ? (
+              <div ref={permissionPanelRef} className="permission-panel-wrap">
+                <button className="btn btn-secondary" onClick={() => setPermissionPanelOpen((prev) => !prev)}>
+                  {t("managePermissions")}
+                </button>
+                {isPermissionPanelOpen ? (
+                  <div className="permission-panel">
+                    <div className="permission-panel-list">
+                      {activeProjectPermissions.length === 0 ? (
+                        <div className="permission-empty">{t("noProjectMembers")}</div>
+                      ) : (
+                        activeProjectPermissions
+                          .slice()
+                          .sort((a, b) => a.email.localeCompare(b.email))
+                          .map((item) => (
+                            <div key={`${item.projectId}:${item.email}`} className="permission-row">
+                              <span className="permission-email">{item.email}</span>
+                              {canManagePermissions ? (
+                                <select
+                                  className="permission-role-select"
+                                  value={item.role}
+                                  onChange={(event) => handleRoleChange(item.email, event.target.value as ProjectRole)}
+                                >
+                                  <option value="admin">{t("roleAdmin")}</option>
+                                  <option value="editor">{t("roleEditor")}</option>
+                                  <option value="viewer">{t("roleViewer")}</option>
+                                </select>
+                              ) : (
+                                <span className="permission-role-label">{getRoleLabel(item.role)}</span>
+                              )}
+                              {canManagePermissions ? (
+                                <button className="btn btn-ghost permission-remove-btn" onClick={() => handleRemovePermission(item.email)}>
+                                  {t("remove")}
+                                </button>
+                              ) : null}
+                            </div>
+                          ))
+                      )}
+                    </div>
+                    {canManagePermissions ? (
+                      <div className="permission-panel-create">
+                        <input
+                          className="input permission-email-input"
+                          value={permissionEmail}
+                          placeholder={t("permissionEmailPlaceholder")}
+                          onChange={(event) => setPermissionEmail(event.target.value)}
+                        />
+                        <select value={permissionRole} onChange={(event) => setPermissionRole(event.target.value as ProjectRole)}>
+                          <option value="admin">{t("roleAdmin")}</option>
+                          <option value="editor">{t("roleEditor")}</option>
+                          <option value="viewer">{t("roleViewer")}</option>
+                        </select>
+                        <button className="btn btn-primary permission-add-btn" onClick={handleUpsertPermission}>
+                          {t("addOrUpdateRole")}
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+            {isRemoteStoreEnabled ? (
+              <div ref={auditPanelRef} className="audit-panel-wrap">
+                <button className="btn btn-secondary" onClick={() => setAuditPanelOpen((prev) => !prev)}>
+                  {language === "zh" ? "审计日志" : "Audit Log"}
+                </button>
+                {isAuditPanelOpen ? (
+                  <div className="audit-panel">
+                    {activeProjectAuditLogs.length === 0 ? (
+                      <div className="permission-empty">{language === "zh" ? "暂无审计记录" : "No audit entries yet"}</div>
+                    ) : (
+                      activeProjectAuditLogs.map((entry) => (
+                        <div key={entry.id} className="audit-row">
+                          <div className="audit-row-main">
+                            <span className="audit-task-name">{entry.taskName}</span>
+                            <span className="audit-field">{getAuditFieldLabel(entry.field)}</span>
+                          </div>
+                          <div className="audit-row-meta">
+                            <span className="audit-before">{entry.before}</span>
+                            <span className="audit-arrow">→</span>
+                            <span className="audit-after">{entry.after}</span>
+                          </div>
+                          <div className="audit-row-foot">
+                            <span>{entry.changedBy}</span>
+                            <span>{new Date(entry.changedAt).toLocaleString(language === "zh" ? "zh-CN" : "en-US")}</span>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                ) : null}
+              </div>
             ) : null}
             <button className="btn btn-secondary" onClick={() => void handleSaveAll()} disabled={!canEdit || !hasUnsavedChanges || isSaving}>
               {isSaving ? (language === "zh" ? "保存中..." : "Saving...") : hasUnsavedChanges ? t("saveChanges") : t("saved")}

@@ -53,6 +53,15 @@ const texts = {
   authSubmitRegister: { zh: "\u6ce8\u518c\u5e76\u767b\u5f55", en: "Create Account" },
   authSwitchToLogin: { zh: "\u5df2\u6709\u8d26\u53f7\uff1f\u767b\u5f55", en: "Already have an account? Sign in" },
   authSwitchToRegister: { zh: "\u6ca1\u6709\u8d26\u53f7\uff1f\u6ce8\u518c", en: "No account? Register" },
+  projectRole: { zh: "\u9879\u76ee\u89d2\u8272", en: "Project Role" },
+  roleAdmin: { zh: "\u7ba1\u7406\u5458", en: "Admin" },
+  roleEditor: { zh: "\u7f16\u8f91", en: "Editor" },
+  roleViewer: { zh: "\u53ea\u8bfb", en: "Read Only" },
+  managePermissions: { zh: "\u6743\u9650\u7ba1\u7406", en: "Permissions" },
+  permissionEmailPlaceholder: { zh: "\u6210\u5458\u90ae\u7bb1", en: "Member email" },
+  addOrUpdateRole: { zh: "\u6dfb\u52a0/\u66f4\u65b0", en: "Add/Update" },
+  remove: { zh: "\u79fb\u9664", en: "Remove" },
+  noProjectMembers: { zh: "\u6682\u65e0\u6210\u5458\u89d2\u8272\u914d\u7f6e", en: "No project members yet" },
   authErrorEmailPasswordRequired: {
     zh: "\u8bf7\u586b\u5199\u6709\u6548\u7684\u90ae\u7bb1\u548c\u81f3\u5c11 6 \u4f4d\u5bc6\u7801",
     en: "Enter a valid email and password (at least 6 characters)"

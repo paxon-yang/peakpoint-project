@@ -16,6 +16,8 @@ export const defaultState: PersistedState = {
     }
   ],
   activeProjectId: "project-ccsa-main",
+  projectPermissions: [],
+  auditLogs: [],
   tasks: [
     createTask({
       id: "task-project-start",

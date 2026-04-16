@@ -44,30 +44,186 @@ interface GanttBoardProps {
   onRequireAuth?: () => void;
 }
 
-type LeftRow = { kind: "category"; category: string; blockKey: string; anchorTaskId?: string } | { kind: "task"; taskId: string };
+type LeftRow =
+  | { kind: "category"; category: string; blockKey: string; anchorTaskId?: string }
+  | { kind: "task"; taskId: string };
+
+type StatusVariant = "not-started" | "in-progress" | "completed" | "blocked";
 
 const CATEGORY_ROW_PREFIX = "__category_row__:";
-const LIST_GRID_TEMPLATE = "248px 128px 128px 134px 134px 64px 52px";
+const LIST_GRID_TEMPLATE = "230px 128px 164px 148px 148px 64px 52px";
 const LIST_GRID_MIN_WIDTH = 980;
 const LEFT_PANEL_RATIO = 0.5;
 const LEFT_PANEL_MIN_WIDTH = 500;
 const TITLE_ROW_HEIGHT = 36;
 const DATES_ROW_HEIGHT = 20;
 const HEADER_HEIGHT = TITLE_ROW_HEIGHT + DATES_ROW_HEIGHT;
-const CATEGORY_BAND_HEIGHT = 33;
-const ROW_HEIGHT = 33;
+const CATEGORY_BAND_HEIGHT = 34;
+const ROW_HEIGHT = 44;
 const TWO_DAY_STEP_MS = 2 * 24 * 60 * 60 * 1000;
+const SVG_NS = "http://www.w3.org/2000/svg";
+const GRADIENT_DEFS_ID = "ccsa-gantt-gradient-defs";
 
-const statusColor = (status: TaskItem["status"]) => {
+type GradientStop = { offset: string; color: string };
+type GradientSpec = { id: string; stops: GradientStop[] };
+
+const GRADIENT_SPECS: GradientSpec[] = [
+  {
+    id: "ccsa-grad-inprogress-bg",
+    stops: [
+      { offset: "0%", color: "#4f8ff6" },
+      { offset: "100%", color: "#1d4ed8" }
+    ]
+  },
+  {
+    id: "ccsa-grad-inprogress-selected",
+    stops: [
+      { offset: "0%", color: "#3b82f6" },
+      { offset: "100%", color: "#1e40af" }
+    ]
+  },
+  {
+    id: "ccsa-grad-inprogress-progress",
+    stops: [
+      { offset: "0%", color: "#2563eb" },
+      { offset: "100%", color: "#1e3a8a" }
+    ]
+  },
+  {
+    id: "ccsa-grad-completed-bg",
+    stops: [
+      { offset: "0%", color: "#34d399" },
+      { offset: "100%", color: "#059669" }
+    ]
+  },
+  {
+    id: "ccsa-grad-completed-selected",
+    stops: [
+      { offset: "0%", color: "#10b981" },
+      { offset: "100%", color: "#047857" }
+    ]
+  },
+  {
+    id: "ccsa-grad-completed-progress",
+    stops: [
+      { offset: "0%", color: "#0ea5a4" },
+      { offset: "100%", color: "#065f46" }
+    ]
+  },
+  {
+    id: "ccsa-grad-notstarted-bg",
+    stops: [
+      { offset: "0%", color: "#94a3b8" },
+      { offset: "100%", color: "#64748b" }
+    ]
+  },
+  {
+    id: "ccsa-grad-notstarted-selected",
+    stops: [
+      { offset: "0%", color: "#7c8aa0" },
+      { offset: "100%", color: "#475569" }
+    ]
+  },
+  {
+    id: "ccsa-grad-notstarted-progress",
+    stops: [
+      { offset: "0%", color: "#6b7280" },
+      { offset: "100%", color: "#374151" }
+    ]
+  },
+  {
+    id: "ccsa-grad-delayed-bg",
+    stops: [
+      { offset: "0%", color: "#f59e0b" },
+      { offset: "100%", color: "#b45309" }
+    ]
+  },
+  {
+    id: "ccsa-grad-delayed-selected",
+    stops: [
+      { offset: "0%", color: "#d97706" },
+      { offset: "100%", color: "#92400e" }
+    ]
+  },
+  {
+    id: "ccsa-grad-delayed-progress",
+    stops: [
+      { offset: "0%", color: "#c2410c" },
+      { offset: "100%", color: "#7c2d12" }
+    ]
+  }
+];
+
+const gradientFill = (id: string): string => `url(#${id})`;
+
+const ensureGradientDefs = (svg: SVGSVGElement) => {
+  if (svg.querySelector(`#${GRADIENT_DEFS_ID}`)) return;
+  const defs = document.createElementNS(SVG_NS, "defs");
+  defs.setAttribute("id", GRADIENT_DEFS_ID);
+
+  for (const spec of GRADIENT_SPECS) {
+    const gradient = document.createElementNS(SVG_NS, "linearGradient");
+    gradient.setAttribute("id", spec.id);
+    gradient.setAttribute("x1", "0%");
+    gradient.setAttribute("y1", "0%");
+    gradient.setAttribute("x2", "100%");
+    gradient.setAttribute("y2", "0%");
+
+    for (const stopSpec of spec.stops) {
+      const stop = document.createElementNS(SVG_NS, "stop");
+      stop.setAttribute("offset", stopSpec.offset);
+      stop.setAttribute("stop-color", stopSpec.color);
+      gradient.appendChild(stop);
+    }
+    defs.appendChild(gradient);
+  }
+
+  svg.insertBefore(defs, svg.firstChild);
+};
+
+const statusVariant = (status: TaskItem["status"]): StatusVariant => {
   switch (status) {
-    case "completed":
-      return "#1aae39";
-    case "delayed":
-      return "#dd5b00";
     case "in_progress":
-      return "#0075de";
+      return "in-progress";
+    case "completed":
+      return "completed";
+    case "delayed":
+      return "blocked";
     default:
-      return "#a39e98";
+      return "not-started";
+  }
+};
+
+const statusBarStyles = (status: TaskItem["status"]): GanttTask["styles"] => {
+  switch (status) {
+    case "in_progress":
+      return {
+        backgroundColor: gradientFill("ccsa-grad-inprogress-bg"),
+        backgroundSelectedColor: gradientFill("ccsa-grad-inprogress-selected"),
+        progressColor: gradientFill("ccsa-grad-inprogress-progress"),
+        progressSelectedColor: gradientFill("ccsa-grad-inprogress-selected")
+      };
+    case "completed":
+      return {
+        backgroundColor: gradientFill("ccsa-grad-completed-bg"),
+        backgroundSelectedColor: gradientFill("ccsa-grad-completed-selected"),
+        progressColor: gradientFill("ccsa-grad-completed-progress"),
+        progressSelectedColor: gradientFill("ccsa-grad-completed-selected")
+      };
+    case "delayed":
+      return {
+        backgroundColor: gradientFill("ccsa-grad-delayed-bg"),
+        backgroundSelectedColor: gradientFill("ccsa-grad-delayed-selected"),
+        progressColor: gradientFill("ccsa-grad-delayed-progress"),
+        progressSelectedColor: gradientFill("ccsa-grad-delayed-selected")
+      };
+    default:
+      return {
+        backgroundColor: gradientFill("ccsa-grad-notstarted-bg"),
+        backgroundSelectedColor: gradientFill("ccsa-grad-notstarted-selected"),
+        progressColor: gradientFill("ccsa-grad-notstarted-progress"),
+        progressSelectedColor: gradientFill("ccsa-grad-notstarted-selected")
+      };
   }
 };
 
@@ -77,13 +233,8 @@ const getViewMode = (viewMode: ViewModeOption): ViewMode => {
   return ViewMode.Day;
 };
 
-const addDays = (date: Date, days: number): Date => {
-  const next = new Date(date);
-  next.setDate(next.getDate() + days);
-  return next;
-};
-
 const isCategoryRowId = (id: string): boolean => id.startsWith(CATEGORY_ROW_PREFIX);
+const normalizeInputDateValue = (value: string): string => toISODate(toDate(value));
 
 export const GanttBoard = ({
   language,
@@ -111,10 +262,22 @@ export const GanttBoard = ({
   const [ganttViewportHeight, setGanttViewportHeight] = useState<number>(420);
   const [leftScrollContentWidth, setLeftScrollContentWidth] = useState<number>(LIST_GRID_MIN_WIDTH);
   const [draggingTaskId, setDraggingTaskId] = useState<string>();
+  const [openStatusMenuTaskId, setOpenStatusMenuTaskId] = useState<string>();
+
   const wrapperRef = useRef<HTMLDivElement>(null);
   const leftHeaderScrollRef = useRef<HTMLDivElement>(null);
   const leftTableScrollRef = useRef<HTMLDivElement>(null);
   const leftProxyScrollRef = useRef<HTMLDivElement>(null);
+
+  const statusOptions = useMemo(
+    () => [
+      { value: "not_started" as const, variant: statusVariant("not_started") },
+      { value: "in_progress" as const, variant: statusVariant("in_progress") },
+      { value: "completed" as const, variant: statusVariant("completed") },
+      { value: "delayed" as const, variant: statusVariant("delayed") }
+    ],
+    []
+  );
 
   const syncHorizontalScroll = (left: number) => {
     const header = leftHeaderScrollRef.current;
@@ -163,10 +326,8 @@ export const GanttBoard = ({
     updateLayout();
     const observer = new ResizeObserver(updateLayout);
     observer.observe(root);
-
     return () => observer.disconnect();
   }, []);
-
   useEffect(() => {
     const table = leftTableScrollRef.current;
     const header = leftHeaderScrollRef.current;
@@ -192,12 +353,13 @@ export const GanttBoard = ({
   }, [tasks.length, listPanelWidth, language, viewMode]);
 
   const taskMap = useMemo(() => new Map(tasks.map((row) => [row.task.id, row])), [tasks]);
-  const parentTaskIdSet = useMemo(() => new Set(tasks.map((row) => row.task.parentId).filter(Boolean) as string[]), [tasks]);
+
   const normalizedViewStartDate = useMemo(() => {
     const safe = /^\d{4}-\d{2}-\d{2}$/.test(viewStartDate) ? viewStartDate : "2026-04-01";
     const date = new Date(`${safe}T00:00:00`);
     return Number.isNaN(date.getTime()) ? new Date("2026-04-01T00:00:00") : date;
   }, [viewStartDate]);
+
   const preStepsCount = useMemo(() => {
     if (tasks.length === 0) return 1;
     const earliestTaskStart = tasks.reduce((earliest, row) => {
@@ -266,16 +428,9 @@ export const GanttBoard = ({
     if (groupedRows.length === 0) return [];
 
     const startDates = tasks.map((row) => toDate(row.task.startDate));
-    const endDates = tasks.map((row) => toDate(row.task.endDate));
     const anchorDate = startDates.reduce((min, current) => (current < min ? current : min), startDates[0]);
-    const maxEndDate = endDates.reduce((max, current) => (current > max ? current : max), endDates[0]);
-    const extensionDays = viewMode === "month" ? 540 : viewMode === "week" ? 140 : 60;
-    const extendedEndDate = addDays(maxEndDate, extensionDays);
 
     const rows: GanttTask[] = [];
-    // gantt-task-react sorts by `displayOrder || Number.MAX_VALUE`.
-    // If displayOrder is 0, it is treated as falsy and pushed to the end.
-    // Start from 1 to keep row order strictly aligned with the left table.
     let displayOrder = 1;
 
     groupedRows.forEach(({ category, rows: categoryRows }, blockIndex) => {
@@ -283,7 +438,7 @@ export const GanttBoard = ({
         id: `${CATEGORY_ROW_PREFIX}${blockIndex}:${category}`,
         name: "",
         start: anchorDate,
-        end: extendedEndDate,
+        end: anchorDate,
         progress: 0,
         type: "task",
         dependencies: [],
@@ -298,31 +453,23 @@ export const GanttBoard = ({
       });
 
       for (const item of categoryRows.filter((row) => !row.task.isCategoryPlaceholder)) {
-        const color = statusColor(item.task.status);
-        const hasChild = parentTaskIdSet.has(item.task.id);
         rows.push({
           id: item.task.id,
           name: item.task.name,
           start: toDate(item.task.startDate),
           end: toDate(item.task.endDate),
           progress: item.task.progress,
-          type: item.task.isMilestone ? "milestone" : hasChild ? "project" : "task",
-          project: item.task.parentId,
+          type: item.task.isMilestone ? "milestone" : "task",
           dependencies: [],
           displayOrder: displayOrder++,
-          styles: {
-            backgroundColor: color,
-            backgroundSelectedColor: "#005bab",
-            progressColor: "#62aef0",
-            progressSelectedColor: "#f2f9ff"
-          },
+          styles: statusBarStyles(item.task.status),
           isDisabled: !canEdit
         });
       }
     });
 
     return rows;
-  }, [canEdit, groupedRows, parentTaskIdSet, tasks, viewMode]);
+  }, [canEdit, groupedRows, tasks, viewMode]);
 
   useEffect(() => {
     const root = wrapperRef.current;
@@ -330,24 +477,18 @@ export const GanttBoard = ({
 
     const normalizeCalendarBottomText = () => {
       const labels = root.querySelectorAll<SVGTextElement>(".calendar-bottom-text, ._9w8d5");
-
       labels.forEach((label, index) => {
         const rawText = (label.textContent || "").trim();
         if (!rawText) return;
-
         const numbers = rawText.match(/\d+/g);
         if (!numbers || numbers.length === 0) return;
-
         const dayNum = String(Number(numbers[numbers.length - 1]));
         if (label.textContent !== dayNum) {
           label.textContent = dayNum;
         }
-
-        // Show every other day label so visible ticks read 9,11,13...
         label.style.opacity = index % 2 === 0 ? "1" : "0";
       });
 
-      // Hide every other vertical day tick so one visible grid cell represents 2 days.
       const verticalTicks = root.querySelectorAll<SVGLineElement>("._RuwuK, ._1rLuZ");
       verticalTicks.forEach((tick, index) => {
         tick.style.opacity = index % 2 === 0 ? "1" : "0";
@@ -358,10 +499,7 @@ export const GanttBoard = ({
     let rafB = 0;
     rafA = requestAnimationFrame(() => {
       normalizeCalendarBottomText();
-      // Run once more after next paint to catch delayed svg text mount.
-      rafB = requestAnimationFrame(() => {
-        normalizeCalendarBottomText();
-      });
+      rafB = requestAnimationFrame(() => normalizeCalendarBottomText());
     });
 
     return () => {
@@ -370,15 +508,38 @@ export const GanttBoard = ({
     };
   }, [viewMode, columnWidth, language, ganttTasks.length]);
 
+  useEffect(() => {
+    const root = wrapperRef.current;
+    if (!root) return;
+    let raf = 0;
+    raf = requestAnimationFrame(() => {
+      const svgs = root.querySelectorAll<SVGSVGElement>("svg");
+      svgs.forEach((svg) => ensureGradientDefs(svg));
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [ganttTasks.length, viewMode, columnWidth, language, listPanelWidth, ganttViewportHeight]);
+
+  useEffect(() => {
+    if (!openStatusMenuTaskId) return;
+    const onWindowMouseDown = (event: MouseEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target?.closest(".status-dropdown-wrap")) return;
+      setOpenStatusMenuTaskId(undefined);
+    };
+    window.addEventListener("mousedown", onWindowMouseDown);
+    return () => window.removeEventListener("mousedown", onWindowMouseDown);
+  }, [openStatusMenuTaskId]);
   return (
     <div
       ref={wrapperRef}
       className="gantt-wrapper notion-gantt-theme gantt-unified-wrapper"
-      style={{
-        "--gantt-header-height": `${HEADER_HEIGHT}px`, 
-        "--gantt-category-band-height": `${CATEGORY_BAND_HEIGHT}px`,
-        "--left-grid-min-width": `${LIST_GRID_MIN_WIDTH}px`
-      } as CSSProperties}
+      style={
+        {
+          "--gantt-header-height": `${HEADER_HEIGHT}px`,
+          "--gantt-category-band-height": `${CATEGORY_BAND_HEIGHT}px`,
+          "--left-grid-min-width": `${LIST_GRID_MIN_WIDTH}px`
+        } as CSSProperties
+      }
     >
       {ganttTasks.length === 0 ? (
         <div className="gantt-empty">{t("ganttEmpty")}</div>
@@ -402,39 +563,34 @@ export const GanttBoard = ({
                 style={{ height: headerHeight, width: rowWidth, minWidth: rowWidth, maxWidth: rowWidth }}
                 onScroll={syncScrollFromHeader}
               >
-              {/* 行1：列标题，高度与右侧年月行对齐 */}
-              <div
-                className="gantt-left-grid gantt-left-grid-header"
-                style={{ height: TITLE_ROW_HEIGHT, gridTemplateColumns: LIST_GRID_TEMPLATE }}
-              >
-                <div className="gantt-left-cell">
-                  <div className="task-name-header-cell">
-                    <button
-                      className="cell-mini-btn"
-                      onClick={() => {
-                        if (!canEdit) {
-                          onRequireAuth?.();
-                          return;
-                        }
-                        onInsertRoot(undefined, "category");
-                      }}
-                      title={t("insertRoot")}
-                      disabled={!canEdit}
-                    >
-                      +
-                    </button>
-                    <span>{t("taskName")}</span>
+                <div className="gantt-left-grid gantt-left-grid-header gantt-col-header-row" style={{ height: TITLE_ROW_HEIGHT, gridTemplateColumns: LIST_GRID_TEMPLATE }}>
+                  <div className="gantt-left-cell gantt-cell gantt-col-header">
+                    <div className="task-name-header-cell">
+                      <button
+                        className="cell-mini-btn"
+                        onClick={() => {
+                          if (!canEdit) {
+                            onRequireAuth?.();
+                            return;
+                          }
+                          onInsertRoot(undefined, "category");
+                        }}
+                        title={t("insertRoot")}
+                        disabled={!canEdit}
+                      >
+                        +
+                      </button>
+                      <span>{t("taskName")}</span>
+                    </div>
                   </div>
+                  <div className="gantt-left-cell gantt-cell gantt-col-header">{t("owner")}</div>
+                  <div className="gantt-left-cell gantt-cell gantt-col-header">{t("status")}</div>
+                  <div className="gantt-left-cell gantt-cell gantt-col-header">{t("start")}</div>
+                  <div className="gantt-left-cell gantt-cell gantt-col-header">{t("end")}</div>
+                  <div className="gantt-left-cell gantt-cell gantt-col-header">{t("duration")}</div>
+                  <div className="gantt-left-cell gantt-cell gantt-col-header">{t("actions")}</div>
                 </div>
-                <div className="gantt-left-cell">{t("owner")}</div>
-                <div className="gantt-left-cell">{t("status")}</div>
-                <div className="gantt-left-cell">{t("start")}</div>
-                <div className="gantt-left-cell">{t("end")}</div>
-                <div className="gantt-left-cell">{t("duration")}</div>
-                <div className="gantt-left-cell">{t("actions")}</div>
-              </div>
-              {/* 行2：空白分隔行，高度与右侧日期行对齐 */}
-              <div className="gantt-left-header-ext" style={{ height: DATES_ROW_HEIGHT }} />
+                <div className="gantt-left-header-ext" style={{ height: DATES_ROW_HEIGHT }} />
               </div>
             )}
             TaskListTable={({ rowHeight, rowWidth, selectedTaskId: listSelectedTaskId, setSelectedTask }) => (
@@ -444,159 +600,192 @@ export const GanttBoard = ({
                 style={{ width: rowWidth, minWidth: rowWidth, maxWidth: rowWidth }}
                 onScroll={syncScrollFromTable}
               >
-              {leftRows.map((rowItem) => {
-                if (rowItem.kind === "category") {
-                  const category = rowItem.category;
+                {leftRows.map((rowItem) => {
+                  if (rowItem.kind === "category") {
+                    const category = rowItem.category;
+                    return (
+                      <div
+                        key={`left-category-${rowItem.blockKey}`}
+                        className="gantt-left-row gantt-left-category-row gantt-row group-header"
+                        style={{ height: rowHeight }}
+                      >
+                        <div className="gantt-left-grid" style={{ gridTemplateColumns: LIST_GRID_TEMPLATE }}>
+                          <div className="gantt-left-cell gantt-cell gantt-cell-task-name">
+                            <div className="category-title-wrap gantt-group-label">
+                              <button
+                                className="cell-mini-btn"
+                                onClick={() => {
+                                  if (!canEdit) {
+                                    onRequireAuth?.();
+                                    return;
+                                  }
+                                  onInsertRoot(category, "task", rowItem.anchorTaskId);
+                                }}
+                                title={t("insertRow")}
+                                disabled={!canEdit}
+                              >
+                                +
+                              </button>
+                              <input
+                                key={`category-${rowItem.blockKey}-${category}`}
+                                className="category-title-input"
+                                defaultValue={category}
+                                onKeyDown={(event) => {
+                                  event.stopPropagation();
+                                  if (event.key === "Enter") {
+                                    event.preventDefault();
+                                    commitCategoryRename(category, (event.target as HTMLInputElement).value);
+                                    (event.target as HTMLInputElement).blur();
+                                  }
+                                  if (event.key === "Escape") {
+                                    event.preventDefault();
+                                    (event.target as HTMLInputElement).value = category;
+                                    (event.target as HTMLInputElement).blur();
+                                  }
+                                }}
+                                onBlur={(event) => commitCategoryRename(category, event.target.value)}
+                                readOnly={!canEdit}
+                              />
+                            </div>
+                          </div>
+                          <div className="gantt-left-cell gantt-cell" />
+                          <div className="gantt-left-cell gantt-cell" />
+                          <div className="gantt-left-cell gantt-cell" />
+                          <div className="gantt-left-cell gantt-cell" />
+                          <div className="gantt-left-cell gantt-cell" />
+                          <div className="gantt-left-cell gantt-cell" />
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  const id = rowItem.taskId;
+                  const visible = taskMap.get(id);
+                  if (!visible) return null;
+
+                  const isSelected = (listSelectedTaskId || selectedTaskId) === id;
+                  const indent = visible.depth * 12;
+                  const hasChildren = visible.hasChildren;
+                  const statusClassMap: Record<TaskItem["status"], string> = {
+                    not_started: "status-not-started",
+                    in_progress: "status-in-progress",
+                    completed: "status-completed",
+                    delayed: "status-delayed"
+                  };
+
                   return (
-                    <div key={`left-category-${rowItem.blockKey}`} className="gantt-left-row gantt-left-category-row" style={{ height: rowHeight }}>
+                    <div
+                      key={id}
+                      className={`gantt-left-row gantt-row ${visible.depth > 0 ? "subtask" : ""} ${isSelected ? "selected-row" : ""}`}
+                      style={{ height: rowHeight }}
+                      onDragOver={(event) => {
+                        if (!canEdit) return;
+                        if (!draggingTaskId || draggingTaskId === id) return;
+                        event.preventDefault();
+                        event.dataTransfer.dropEffect = "move";
+                      }}
+                      onDrop={(event) => {
+                        if (!canEdit) return;
+                        event.preventDefault();
+                        const fromData = event.dataTransfer.getData("text/plain");
+                        const activeId = draggingTaskId || fromData;
+                        if (!activeId || activeId === id) return;
+                        onReorderTask(activeId, id);
+                        setDraggingTaskId(undefined);
+                      }}
+                      onClick={() => {
+                        setSelectedTask(id);
+                        onSelectTask(id);
+                        setOpenStatusMenuTaskId(undefined);
+                      }}
+                    >
                       <div className="gantt-left-grid" style={{ gridTemplateColumns: LIST_GRID_TEMPLATE }}>
-                        <div className="gantt-left-cell">
-                          <div className="category-title-wrap">
-                            <button
-                              className="cell-mini-btn"
-                              onClick={() => {
-                                if (!canEdit) {
-                                  onRequireAuth?.();
-                                  return;
-                                }
-                                onInsertRoot(category, "task", rowItem.anchorTaskId);
-                              }}
-                              title={t("insertRow")}
-                              disabled={!canEdit}
-                            >
-                              +
-                            </button>
+                        <div className="gantt-left-cell gantt-cell gantt-cell-task-name task-name-gantt-cell">
+                          <div className="task-name-cell" style={{ paddingLeft: `${indent}px` }}>
+                            <div className="row-controls">
+                              <button
+                                type="button"
+                                className="row-drag-handle drag-handle"
+                                title={language === "zh" ? "\u62d6\u52a8\u6392\u5e8f" : "Drag to reorder"}
+                                disabled={!canEdit}
+                                draggable={canEdit}
+                                onDragStart={(event) => {
+                                  if (!canEdit) {
+                                    event.preventDefault();
+                                    onRequireAuth?.();
+                                    return;
+                                  }
+                                  event.stopPropagation();
+                                  setDraggingTaskId(id);
+                                  event.dataTransfer.effectAllowed = "move";
+                                  event.dataTransfer.setData("text/plain", id);
+                                }}
+                                onDragEnd={() => setDraggingTaskId(undefined)}
+                                onMouseDown={(event) => event.stopPropagation()}
+                                onClick={(event) => event.stopPropagation()}
+                              >
+                                ::
+                              </button>
+                              <button
+                                type="button"
+                                className={`icon-btn category-toggle expand-toggle ${hasChildren && !collapsedTaskIds.has(id) ? "expanded" : ""}`}
+                                disabled={!hasChildren}
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  if (!hasChildren) return;
+                                  onToggleCollapse(id);
+                                }}
+                                title={language === "zh" ? "\u5b50\u4efb\u52a1\u5c55\u5f00/\u6536\u8d77" : "Expand/Collapse Subtasks"}
+                              >
+                                {hasChildren ? "\u25b8" : "\u00b7"}
+                              </button>
+                              <button
+                                type="button"
+                                className="cell-mini-btn subtask-add-btn add-subtask-btn"
+                                disabled={!canEdit}
+                                title={language === "zh" ? "\u65b0\u589e\u5b50\u4efb\u52a1" : "Add subtask"}
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  if (!canEdit) {
+                                    onRequireAuth?.();
+                                    return;
+                                  }
+                                  onInsertChild(id);
+                                }}
+                              >
+                                +
+                              </button>
+                            </div>
                             <input
-                              key={`category-${rowItem.blockKey}-${category}`}
-                              className="category-title-input"
-                              defaultValue={category}
+                              key={`${id}-name-${visible.task.name}`}
+                              className="inline-text"
+                              defaultValue={visible.task.name}
+                              readOnly={!canEdit}
+                              onMouseDown={(event) => event.stopPropagation()}
+                              onClick={(event) => event.stopPropagation()}
+                              onFocus={(event) => event.currentTarget.select()}
                               onKeyDown={(event) => {
                                 event.stopPropagation();
                                 if (event.key === "Enter") {
                                   event.preventDefault();
-                                  commitCategoryRename(category, (event.target as HTMLInputElement).value);
+                                  commitInlineField(visible.task, "name", (event.target as HTMLInputElement).value);
                                   (event.target as HTMLInputElement).blur();
                                 }
                                 if (event.key === "Escape") {
                                   event.preventDefault();
-                                  (event.target as HTMLInputElement).value = category;
+                                  (event.target as HTMLInputElement).value = visible.task.name;
                                   (event.target as HTMLInputElement).blur();
                                 }
                               }}
-                              onBlur={(event) => commitCategoryRename(category, event.target.value)}
-                              readOnly={!canEdit}
+                              onBlur={(event) => commitInlineField(visible.task, "name", event.target.value)}
                             />
                           </div>
                         </div>
-                        <div className="gantt-left-cell" />
-                        <div className="gantt-left-cell" />
-                        <div className="gantt-left-cell" />
-                        <div className="gantt-left-cell" />
-                        <div className="gantt-left-cell" />
-                        <div className="gantt-left-cell" />
-                      </div>
-                    </div>
-                  );
-                }
-
-                const id = rowItem.taskId;
-                const visible = taskMap.get(id);
-                if (!visible) return null;
-
-                const isSelected = (listSelectedTaskId || selectedTaskId) === id;
-                const indent = visible.depth * 12;
-                const hasChildren = visible.hasChildren;
-                const statusClassMap: Record<TaskItem["status"], string> = {
-                  not_started: "status-not-started",
-                  in_progress: "status-in-progress",
-                  completed: "status-completed",
-                  delayed: "status-delayed"
-                };
-
-                return (
-                  <div
-                    key={id}
-                    className={`gantt-left-row ${isSelected ? "selected-row" : ""}`}
-                    style={{ height: rowHeight }}
-                    onDragOver={(event) => {
-                      if (!canEdit) return;
-                      if (!draggingTaskId || draggingTaskId === id) return;
-                      event.preventDefault();
-                      event.dataTransfer.dropEffect = "move";
-                    }}
-                    onDrop={(event) => {
-                      if (!canEdit) return;
-                      event.preventDefault();
-                      const fromData = event.dataTransfer.getData("text/plain");
-                      const activeId = draggingTaskId || fromData;
-                      if (!activeId || activeId === id) return;
-                      onReorderTask(activeId, id);
-                      setDraggingTaskId(undefined);
-                    }}
-                    onClick={() => {
-                      setSelectedTask(id);
-                      onSelectTask(id);
-                    }}
-                  >
-                    <div className="gantt-left-grid" style={{ gridTemplateColumns: LIST_GRID_TEMPLATE }}>
-                      <div className="gantt-left-cell task-name-gantt-cell">
-                        <div className="task-name-cell" style={{ paddingLeft: `${indent}px` }}>
-                          <button
-                            type="button"
-                            className="row-drag-handle"
-                            title={language === "zh" ? "拖动排序" : "Drag to reorder"}
-                            disabled={!canEdit}
-                            draggable={canEdit}
-                            onDragStart={(event) => {
-                              if (!canEdit) {
-                                event.preventDefault();
-                                onRequireAuth?.();
-                                return;
-                              }
-                              event.stopPropagation();
-                              setDraggingTaskId(id);
-                              event.dataTransfer.effectAllowed = "move";
-                              event.dataTransfer.setData("text/plain", id);
-                            }}
-                            onDragEnd={() => setDraggingTaskId(undefined)}
-                            onMouseDown={(event) => event.stopPropagation()}
-                            onClick={(event) => event.stopPropagation()}
-                          >
-                            ::
-                          </button>
-                          <button
-                            type="button"
-                            className="icon-btn category-toggle"
-                            disabled={!hasChildren}
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              if (!hasChildren) return;
-                              onToggleCollapse(id);
-                            }}
-                            title={language === "zh" ? "\u5b50\u4efb\u52a1\u5c55\u5f00/\u6536\u8d77" : "Expand/Collapse Subtasks"}
-                          >
-                            {hasChildren ? (collapsedTaskIds.has(id) ? "▸" : "▾") : "·"}
-                          </button>
-                          <button
-                            type="button"
-                            className="cell-mini-btn subtask-add-btn"
-                            disabled={!canEdit}
-                            title={language === "zh" ? "\u65b0\u589e\u5b50\u4efb\u52a1" : "Add subtask"}
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              if (!canEdit) {
-                                onRequireAuth?.();
-                                return;
-                              }
-                              onInsertChild(id);
-                            }}
-                          >
-                            +
-                          </button>
+                        <div className="gantt-left-cell gantt-cell">
                           <input
-                            key={`${id}-name-${visible.task.name}`}
+                            key={`${id}-owner-${visible.task.owner}`}
                             className="inline-text"
-                            defaultValue={visible.task.name}
+                            defaultValue={visible.task.owner}
                             readOnly={!canEdit}
                             onMouseDown={(event) => event.stopPropagation()}
                             onClick={(event) => event.stopPropagation()}
@@ -605,142 +794,140 @@ export const GanttBoard = ({
                               event.stopPropagation();
                               if (event.key === "Enter") {
                                 event.preventDefault();
-                                commitInlineField(visible.task, "name", (event.target as HTMLInputElement).value);
+                                commitInlineField(visible.task, "owner", (event.target as HTMLInputElement).value);
                                 (event.target as HTMLInputElement).blur();
                               }
                               if (event.key === "Escape") {
                                 event.preventDefault();
-                                (event.target as HTMLInputElement).value = visible.task.name;
+                                (event.target as HTMLInputElement).value = visible.task.owner;
                                 (event.target as HTMLInputElement).blur();
                               }
                             }}
-                            onBlur={(event) => commitInlineField(visible.task, "name", event.target.value)}
+                            onBlur={(event) => commitInlineField(visible.task, "owner", event.target.value)}
                           />
                         </div>
-                      </div>
-                      <div className="gantt-left-cell">
-                        <input
-                          key={`${id}-owner-${visible.task.owner}`}
-                          className="inline-text"
-                          defaultValue={visible.task.owner}
-                          readOnly={!canEdit}
-                          onMouseDown={(event) => event.stopPropagation()}
-                          onClick={(event) => event.stopPropagation()}
-                          onFocus={(event) => event.currentTarget.select()}
-                          onKeyDown={(event) => {
-                            event.stopPropagation();
-                            if (event.key === "Enter") {
-                              event.preventDefault();
-                              commitInlineField(visible.task, "owner", (event.target as HTMLInputElement).value);
-                              (event.target as HTMLInputElement).blur();
-                            }
-                            if (event.key === "Escape") {
-                              event.preventDefault();
-                              (event.target as HTMLInputElement).value = visible.task.owner;
-                              (event.target as HTMLInputElement).blur();
-                            }
-                          }}
-                          onBlur={(event) => commitInlineField(visible.task, "owner", event.target.value)}
-                        />
-                      </div>
-                      <div className={`gantt-left-cell status-cell ${statusClassMap[visible.task.status]}`}>
-                        <select
-                          className="inline-select"
-                          value={visible.task.status}
-                          disabled={!canEdit}
-                          onMouseDown={(event) => event.stopPropagation()}
-                          onClick={(event) => event.stopPropagation()}
-                          onKeyDown={(event) => event.stopPropagation()}
-                          onChange={(event) => {
-                            if (!canEdit) {
-                              onRequireAuth?.();
-                              return;
-                            }
-                            onQuickUpdate(id, { status: event.target.value as TaskItem["status"] });
-                          }}
+                        <div
+                          className={`gantt-left-cell gantt-cell status-cell ${
+                            statusClassMap[visible.task.status]
+                          } ${openStatusMenuTaskId === id ? "status-cell-open" : ""}`}
                         >
-                          <option value="not_started">{getStatusLabel(language, "not_started")}</option>
-                          <option value="in_progress">{getStatusLabel(language, "in_progress")}</option>
-                          <option value="completed">{getStatusLabel(language, "completed")}</option>
-                          <option value="delayed">{getStatusLabel(language, "delayed")}</option>
-                        </select>
-                      </div>
-                      <div className="gantt-left-cell">
-                        <input
-                          key={`${id}-start-${visible.task.startDate}`}
-                          type="date"
-                          className="inline-date"
-                          defaultValue={visible.task.startDate}
-                          disabled={!canEdit}
-                          onMouseDown={(event) => event.stopPropagation()}
-                          onClick={(event) => event.stopPropagation()}
-                          onKeyDown={(event) => {
-                            event.stopPropagation();
-                            if (event.key === "Enter") {
-                              event.preventDefault();
-                              commitInlineField(visible.task, "startDate", (event.target as HTMLInputElement).value);
-                              (event.target as HTMLInputElement).blur();
-                            }
-                            if (event.key === "Escape") {
-                              event.preventDefault();
-                              (event.target as HTMLInputElement).value = visible.task.startDate;
-                              (event.target as HTMLInputElement).blur();
-                            }
-                          }}
-                          onBlur={(event) => commitInlineField(visible.task, "startDate", event.target.value)}
-                        />
-                      </div>
-                      <div className="gantt-left-cell">
-                        <input
-                          key={`${id}-end-${visible.task.endDate}`}
-                          type="date"
-                          className="inline-date"
-                          defaultValue={visible.task.endDate}
-                          disabled={!canEdit}
-                          onMouseDown={(event) => event.stopPropagation()}
-                          onClick={(event) => event.stopPropagation()}
-                          onKeyDown={(event) => {
-                            event.stopPropagation();
-                            if (event.key === "Enter") {
-                              event.preventDefault();
-                              commitInlineField(visible.task, "endDate", (event.target as HTMLInputElement).value);
-                              (event.target as HTMLInputElement).blur();
-                            }
-                            if (event.key === "Escape") {
-                              event.preventDefault();
-                              (event.target as HTMLInputElement).value = visible.task.endDate;
-                              (event.target as HTMLInputElement).blur();
-                            }
-                          }}
-                          onBlur={(event) => commitInlineField(visible.task, "endDate", event.target.value)}
-                        />
-                      </div>
-                      <div className="gantt-left-cell">{`${visible.task.duration}${t("daySuffix")}`}</div>
-                      <div className="gantt-left-cell row-delete-cell">
-                        <button
-                          className="cell-delete-btn"
-                          title={t("quickDelete")}
-                          disabled={!canEdit}
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            if (!canEdit) {
-                              onRequireAuth?.();
-                              return;
-                            }
-                            onDeleteTask(id);
-                          }}
-                        >
-                          x
-                        </button>
+                          <div
+                            className="status-dropdown-wrap"
+                            onMouseDown={(event) => event.stopPropagation()}
+                            onClick={(event) => event.stopPropagation()}
+                          >
+                            <button
+                              type="button"
+                              className={`status-badge ${statusVariant(visible.task.status)}`}
+                              onClick={() => {
+                                if (!canEdit) {
+                                  onRequireAuth?.();
+                                  return;
+                                }
+                                setOpenStatusMenuTaskId((prev) => (prev === id ? undefined : id));
+                              }}
+                            >
+                              <span className="status-badge-dot" />
+                              <span>{getStatusLabel(language, visible.task.status)}</span>
+                            </button>
+                            {canEdit && openStatusMenuTaskId === id ? (
+                              <div className="status-dropdown-menu">
+                                {statusOptions.map((option) => (
+                                  <button
+                                    key={option.value}
+                                    type="button"
+                                    className="status-dropdown-item"
+                                    onClick={() => {
+                                      onQuickUpdate(id, { status: option.value });
+                                      setOpenStatusMenuTaskId(undefined);
+                                    }}
+                                  >
+                                    <span className={`status-dropdown-item-dot ${option.variant}`} />
+                                    <span>{getStatusLabel(language, option.value)}</span>
+                                  </button>
+                                ))}
+                              </div>
+                            ) : null}
+                          </div>
+                        </div>
+                        <div className="gantt-left-cell gantt-cell">
+                          <input
+                            type="date"
+                            className="inline-date"
+                            value={normalizeInputDateValue(visible.task.startDate)}
+                            disabled={!canEdit}
+                            onMouseDown={(event) => event.stopPropagation()}
+                            onClick={(event) => event.stopPropagation()}
+                            onChange={(event) => {
+                              const nextStartDate = event.target.value;
+                              if (!nextStartDate) return;
+                              onDateChange(
+                                id,
+                                nextStartDate,
+                                normalizeInputDateValue(visible.task.endDate)
+                              );
+                            }}
+                            onKeyDown={(event) => {
+                              event.stopPropagation();
+                              if (event.key === "Enter" || event.key === "Escape") {
+                                event.preventDefault();
+                                (event.target as HTMLInputElement).blur();
+                              }
+                            }}
+                          />
+                        </div>
+                        <div className="gantt-left-cell gantt-cell">
+                          <input
+                            type="date"
+                            className="inline-date"
+                            value={normalizeInputDateValue(visible.task.endDate)}
+                            disabled={!canEdit}
+                            onMouseDown={(event) => event.stopPropagation()}
+                            onClick={(event) => event.stopPropagation()}
+                            onChange={(event) => {
+                              const nextEndDate = event.target.value;
+                              if (!nextEndDate) return;
+                              onDateChange(
+                                id,
+                                normalizeInputDateValue(visible.task.startDate),
+                                nextEndDate
+                              );
+                            }}
+                            onKeyDown={(event) => {
+                              event.stopPropagation();
+                              if (event.key === "Enter" || event.key === "Escape") {
+                                event.preventDefault();
+                                (event.target as HTMLInputElement).blur();
+                              }
+                            }}
+                          />
+                        </div>
+                        <div className="gantt-left-cell gantt-cell">{`${visible.task.duration}${t("daySuffix")}`}</div>
+                        <div className="gantt-left-cell gantt-cell row-delete-cell">
+                          <button
+                            className="cell-delete-btn"
+                            title={t("quickDelete")}
+                            disabled={!canEdit}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              if (!canEdit) {
+                                onRequireAuth?.();
+                                return;
+                              }
+                              onDeleteTask(id);
+                            }}
+                          >
+                            x
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
               </div>
             )}
             columnWidth={columnWidth}
-            todayColor="transparent"
+            todayColor="rgba(59, 130, 246, 0.06)"
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore gantt-task-react runtime supports selectedTaskId but type definitions miss it.
             selectedTaskId={selectedTaskId}
