@@ -2724,4 +2724,27 @@ button {
 .export-panel {
   position: absolute;
   top: 38px;
-  right:
+  right: 0;
+  width: 150px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12);
+  padding: 8px;
+  z-index: 6000;
+  display: grid;
+  gap: 6px;
+}
+
+.export-btn {
+  justify-content: center;
+  height: 30px;
+  font-size: 12px;
+}
+
+/* Header micro-adjust: keep single-line layout but lift content slightly */
+.header-title-group,
+.header-actions {
+  position: relative;
+  top: -3px;
+}

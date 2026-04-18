@@ -1086,4 +1086,21 @@ export const GanttBoard = ({
                 onRequireAuth?.();
                 return false;
               }
-          
+              onDateChange(id, toISODate(task.start), toISODate(task.end));
+              return true;
+            }}
+          />
+          <div
+            ref={leftProxyScrollRef}
+            className="left-proxy-scrollbar"
+            style={{ width: `${listPanelWidth}px` }}
+            onScroll={syncScrollFromProxy}
+          >
+            <div style={{ width: `${leftScrollContentWidth}px`, height: "1px" }} />
+          </div>
+          <div className="gantt-split-divider" style={{ left: `${listPanelWidth}px` }} />
+        </>
+      )}
+    </div>
+  );
+};
