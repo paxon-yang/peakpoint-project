@@ -108,10 +108,13 @@ button {
 }
 
 .header-brand-logo {
-  width: 36px;
-  height: 36px;
+  width: 52px;
+  height: 52px;
   object-fit: contain;
+  object-position: center;
   flex: 0 0 auto;
+  position: relative;
+  top: -7px;
 }
 
 .header-title-text {
@@ -772,6 +775,23 @@ button {
 
 .gantt-empty {
   padding: 24px;
+  color: var(--text-3);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.gantt-empty p {
+  margin: 0;
+}
+
+.gantt-empty-action {
+  height: 34px;
+}
+
+.gantt-empty-hint {
+  font-size: 12px;
   color: var(--text-3);
 }
 
@@ -2704,20 +2724,4 @@ button {
 .export-panel {
   position: absolute;
   top: 38px;
-  right: 0;
-  width: 150px;
-  border: 1px solid #d1d5db;
-  border-radius: 10px;
-  background: #ffffff;
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12);
-  padding: 8px;
-  z-index: 6000;
-  display: grid;
-  gap: 6px;
-}
-
-.export-btn {
-  justify-content: center;
-  height: 30px;
-  font-size: 12px;
-}
+  right:

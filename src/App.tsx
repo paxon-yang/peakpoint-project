@@ -42,8 +42,8 @@ import { computeCriticalPath, isDelayedOrOverdue } from "./utils/projectAnalysis
 import { hasDependencyCycle, isEndBeforeStart, normalizeDependencyIds } from "./utils/taskValidation";
 import { getDescendantIds, getVisibleTasks, reorderTasks, sanitizeTask } from "./utils/taskUtils";
 
-const STORAGE_KEY = "ccsa-project-management-state-v2";
-const LEGACY_STORAGE_KEYS = ["ccsa-project-management-state-v1"];
+const STORAGE_KEY = "peakpoint-project-management-state-v1";
+const LEGACY_STORAGE_KEYS: string[] = [];
 const LANGUAGE_KEY = "ccsa-project-management-language";
 const LEGACY_PROJECT_NAME = "CCSA主项目 / CCSA Main Project";
 const TARGET_PROJECT_NAME = "TMM project";
@@ -1623,7 +1623,6 @@ export const App = () => {
             <img className="header-brand-logo" src={peakpointLogo} alt="PeakPoint logo" />
             <div className="header-title-text">
               <h1>PeakPoint Project Management</h1>
-              <p>{t("appSubtitle")}</p>
             </div>
           </div>
           <div className="header-actions">
@@ -2152,3 +2151,4 @@ export const App = () => {
 };
 
 
+                                                           

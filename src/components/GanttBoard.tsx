@@ -23,6 +23,7 @@ interface GanttBoardProps {
       | "insertRow"
       | "insertRoot"
       | "daySuffix"
+      | "authReadonlyHint"
   ) => string;
   tasks: VisibleTask[];
   selectedTaskId?: string;
@@ -598,13 +599,15 @@ export const GanttBoard = ({
     if (!root) return;
 
     const normalizeCalendarBottomText = () => {
-      const labels = root.querySelectorAll<SVGTextElement>(".calendar-bottom-text, ._9w8d5");
+      const labels = root.querySelectorAll<SVGTextElement>(".calendar-bottom-text, ._9w8d5, .calendar-row text");
       labels.forEach((label, index) => {
         const rawText = (label.textContent || "").trim();
         if (!rawText) return;
         const numbers = rawText.match(/\d+/g);
         if (!numbers || numbers.length === 0) return;
-        const dayNum = String(Number(numbers[numbers.length - 1]));
+        const dayValue = Number(numbers[numbers.length - 1]);
+        if (!Number.isInteger(dayValue) || dayValue < 1 || dayValue > 31) return;
+        const dayNum = String(dayValue);
         if (label.textContent !== dayNum) {
           label.textContent = dayNum;
         }
@@ -664,7 +667,20 @@ export const GanttBoard = ({
       }
     >
       {ganttTasks.length === 0 ? (
-        <div className="gantt-empty">{t("ganttEmpty")}</div>
+        <div className="gantt-empty">
+          <p>{t("ganttEmpty")}</p>
+          {canEdit ? (
+            <button
+              className="btn btn-primary gantt-empty-action"
+              onClick={() => onInsertRoot(undefined, "category")}
+              type="button"
+            >
+              {t("insertRoot")}
+            </button>
+          ) : (
+            <p className="gantt-empty-hint">{t("authReadonlyHint")}</p>
+          )}
+        </div>
       ) : (
         <>
           <Gantt
@@ -1070,21 +1086,4 @@ export const GanttBoard = ({
                 onRequireAuth?.();
                 return false;
               }
-              onDateChange(id, toISODate(task.start), toISODate(task.end));
-              return true;
-            }}
-          />
-          <div
-            ref={leftProxyScrollRef}
-            className="left-proxy-scrollbar"
-            style={{ width: `${listPanelWidth}px` }}
-            onScroll={syncScrollFromProxy}
-          >
-            <div style={{ width: `${leftScrollContentWidth}px`, height: "1px" }} />
-          </div>
-          <div className="gantt-split-divider" style={{ left: `${listPanelWidth}px` }} />
-        </>
-      )}
-    </div>
-  );
-};
+          

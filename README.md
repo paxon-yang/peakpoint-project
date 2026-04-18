@@ -9,6 +9,10 @@
 - 功能核心可用：项目管理、任务管理、甘特展示、筛选排序、拖拽调整、本地存储
 - 已封版：见 [UI_BASELINE_V1.md](./UI_BASELINE_V1.md)
 
+## 使用教材
+
+- 基础图文教程：[使用教材-基础版.md](./使用教材-基础版.md)
+
 ## 功能概览
 
 - 左表右图布局（左侧任务表 + 右侧甘特图）
@@ -171,5 +175,4 @@ Notes:
 
 - The endpoint is `POST /api/send-email`
 - Frontend entry is the new **Email Alerts / 邮件通知** menu in the header
-- If you run `npm run dev` locally, Vite does not run Vercel API routes.
-  - Test mail on deployed Vercel URL, or run with `vercel dev`
+- If you run `npm run dev` locally, Vi
