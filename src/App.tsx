@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import * as XLSX from "xlsx";
+import peakpointLogo from "./assets/peakpoint-logo.jpg";
 import { AuthDialog } from "./components/AuthDialog";
 import { GanttBoard } from "./components/GanttBoard";
 import { ProjectDialog } from "./components/ProjectDialog";
@@ -1619,8 +1620,11 @@ export const App = () => {
       <header className="app-header">
         <div className="header-inner header-inner-full">
           <div className="header-title-group">
-            <h1>{t("appTitle")}</h1>
-            <p>{t("appSubtitle")}</p>
+            <img className="header-brand-logo" src={peakpointLogo} alt="PeakPoint logo" />
+            <div className="header-title-text">
+              <h1>PeakPoint Project Management</h1>
+              <p>{t("appSubtitle")}</p>
+            </div>
           </div>
           <div className="header-actions">
             <div className="language-toggle" aria-label={t("language")}>

@@ -133,6 +133,7 @@ with check (true);
 Copy `.env.example` to `.env.local` and fill values:
 
 ```bash
+VITE_REMOTE_STORE_ENABLED=true
 VITE_SUPABASE_URL=https://your-project-ref.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key
 VITE_WORKSPACE_ID=tmm-main
@@ -150,6 +151,7 @@ Set the same `VITE_...` variables in Vercel Project Settings -> Environment Vari
   - Supabase (shared data for all users)
   - localStorage (local backup)
 - If Supabase is not configured, `Save` writes to localStorage only.
+- If `VITE_REMOTE_STORE_ENABLED=false`, remote storage is forced off even when Supabase env vars are present.
 
 ### 5) Email notifications (P2)
 

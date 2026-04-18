@@ -100,6 +100,24 @@ button {
   padding-right: 14px;
 }
 
+.header-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.header-brand-logo {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  flex: 0 0 auto;
+}
+
+.header-title-text {
+  min-width: 0;
+}
+
 .header-title-group h1 {
   margin: 0;
   color: var(--text-1);
@@ -107,6 +125,9 @@ button {
   font-weight: 700;
   line-height: 1.1;
   letter-spacing: -0.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .header-title-group p {

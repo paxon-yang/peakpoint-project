@@ -15,15 +15,18 @@ export type AuthUser = {
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const workspaceId = import.meta.env.VITE_WORKSPACE_ID || "tmm-main";
+const remoteStoreEnabledEnv = String(import.meta.env.VITE_REMOTE_STORE_ENABLED ?? "true").toLowerCase();
+const remoteStoreEnabledByFlag = !(remoteStoreEnabledEnv === "false" || remoteStoreEnabledEnv === "0" || remoteStoreEnabledEnv === "off");
+const remoteStoreReady = remoteStoreEnabledByFlag && Boolean(supabaseUrl && supabaseAnonKey);
 
 const supabase =
-  supabaseUrl && supabaseAnonKey
-    ? createClient(supabaseUrl, supabaseAnonKey, {
+  remoteStoreReady
+    ? createClient(supabaseUrl as string, supabaseAnonKey as string, {
         auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
       })
     : null;
 
-export const isRemoteStoreEnabled = Boolean(supabase);
+export const isRemoteStoreEnabled = remoteStoreReady;
 
 const toAuthUser = (user: { id: string; email?: string | null } | null): AuthUser | null => {
   if (!user) return null;
@@ -32,7 +35,7 @@ const toAuthUser = (user: { id: string; email?: string | null } | null): AuthUse
 
 const getClientOrThrow = () => {
   if (!supabase) {
-    throw new Error("Supabase is not configured.");
+    throw new Error("Supabase is disabled or not configured.");
   }
   return supabase;
 };
